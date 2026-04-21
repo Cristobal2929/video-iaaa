@@ -7,26 +7,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Descargar código
+      - name: Descargar codigo
         uses: actions/checkout@v3
 
-      - name: Instalar Python y dependencias
+      - name: Instalar dependencias
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           pip install -r requirements.txt
 
-      - name: Ejecutar Motor Fénix
+      - name: Ejecutar Motor Fenix
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           python3 main.py --tema "${{ github.event.client_payload.tema }}"
 
-      - name: Guardar resultado
+      - name: Guardar Video
         run: |
-          git config --global user.name "Motor Fénix"
+          git config --global user.name "Motor Fenix"
           git config --global user.email "bot@ia.com"
           git add static/*.mp4
-          git commit -m "Video generado"
+          git commit -m "Nuevo video generado"
           git push
