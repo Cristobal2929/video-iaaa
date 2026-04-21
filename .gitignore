@@ -1,0 +1,7 @@
+workspaces/
+static/
+*.mp4
+*.m4a
+*.mp3
+node_modules/
+.next/
