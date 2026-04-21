@@ -2,31 +2,36 @@ name: Generar Video Viral
 on:
   repository_dispatch:
     types: [generar_video_viral]
+  workflow_dispatch: # Esto añade el botón manual en GitHub
+    inputs:
+      tema:
+        description: 'Tema del video'
+        required: true
+        default: 'Curiosidades'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Descargar codigo
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Instalar dependencias
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install -r requirements.txt
-
-      - name: Ejecutar Motor Fenix
+      - name: Run Engine
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: |
-          python3 main.py --tema "${{ github.event.client_payload.tema }}"
-
-      - name: Guardar Video
+        run: python3 main.py --tema "${{ github.event.client_payload.tema || github.event.inputs.tema }}"
+      - name: Push results
         run: |
           git config --global user.name "Motor Fenix"
           git config --global user.email "bot@ia.com"
-          git add static/*.mp4
-          git commit -m "Nuevo video generado"
+          git add static/*.mp4 || true
+          git commit -m "Video generado" || true
           git push
