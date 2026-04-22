@@ -5,23 +5,25 @@ on:
 jobs:
   construir:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Instalar Herramientas
+      - name: Instalar
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install google-generativeai yt-dlp edge-tts
-      - name: Ejecutar Motor
+          pip install google-generativeai edge-tts requests
+      - name: Motor
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py --tema "${{ github.event.client_payload.tema }}"
-      - name: 🚀 SUBIR VÍDEO A LA WEB
+      - name: 🚀 GUARDAR EN GITHUB
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add static/video_final.mp4
-          git commit -m "Vídeo listo para la web" || echo "Sin cambios"
+          git commit -m "Video actualizado" || echo "Nada nuevo"
           git push origin main
