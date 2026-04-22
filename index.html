@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Fénix - IA Videos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #0d1117; color: #c9d1d9; margin-top: 50px; }
+        h1 { color: #58a6ff; }
+        input { padding: 15px; width: 80%; max-width: 400px; border-radius: 8px; border: 1px solid #30363d; background-color: #010409; color: white; margin-bottom: 20px; font-size: 16px; }
+        .btn-generar { background-color: #f39c12; color: white; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
+        .btn-descargar { background-color: #238636; color: white; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(35, 134, 54, 0.4); margin-top: 20px; }
+        #zona-resultado { display: none; margin-top: 40px; }
+        video { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 2px solid #30363d; }
+    </style>
+</head>
+<body>
+
+    <h1>🔥 Creador de Vídeos Virales 🔥</h1>
+    <p>Escribe tu tema y deja que la IA trabaje en la nube:</p>
+
+    <input type="text" id="tema" placeholder="Ej: La historia secreta de las pirámides...">
+    <br>
+    
+    <button class="btn-generar" onclick="simularGeneracion()">🎬 GENERAR VÍDEO VIRAL</button>
+
+    <p id="estado" style="color: #f39c12; display: none; margin-top: 20px;">⏳ Fabricando vídeo en el servidor... (Espera unos segundos)</p>
+
+    <div id="zona-resultado">
+        <h2 style="color: #3fb950;">✅ ¡Tu vídeo está listo!</h2>
+        
+        <video width="320" height="568" controls id="reproductor">
+            <source src="" type="video/mp4" id="video-src">
+            Tu navegador no soporta vídeos.
+        </video>
+        <br>
+        <a href="" id="link-descarga" download="Video_Viral.mp4">
+            <button class="btn-descargar">⬇️ DESCARGAR VÍDEO</button>
+        </a>
+    </div>
+
+    <script>
+        function simularGeneracion() {
+            const tema = document.getElementById('tema').value;
+            if(!tema) { alert('Por favor, escribe un tema primero.'); return; }
+            
+            // Ocultar botón, mostrar mensaje de carga
+            document.querySelector('.btn-generar').style.display = 'none';
+            document.getElementById('estado').style.display = 'block';
+            
+            // Aquí en el futuro conectarás con Vercel/GitHub. Ahora simulamos la espera de la creación.
+            setTimeout(() => {
+                document.getElementById('estado').style.display = 'none';
+                document.getElementById('zona-resultado').style.display = 'block';
+                document.querySelector('.btn-generar').style.display = 'inline-block';
+                
+                // Truco para evitar la caché de GitHub: le ponemos un número aleatorio al final
+                const urlVideo = "https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?t=" + new Date().getTime();
+                
+                document.getElementById('reproductor').src = urlVideo;
+                document.getElementById('link-descarga').href = urlVideo;
+                
+            }, 3000); // Aparece a los 3 segundos para que veas el resultado
+        }
+    </script>
+</body>
+</html>
