@@ -14,7 +14,7 @@ if not PEXELS_API_KEY:
     raise Exception("❌ Falta PEXELS_API_KEY")
 
 # =========================
-# IA GROQ
+# IA GROQ (MODELO POTENTE)
 # =========================
 def generar_guion_y_keywords(tema):
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -24,10 +24,25 @@ def generar_guion_y_keywords(tema):
         "Content-Type": "application/json"
     }
 
+    prompt = f"""
+Eres un creador experto de vídeos virales.
+
+Crea un guion de 15-20 segundos sobre: {tema}
+
+REGLAS:
+- Muy emocional y viral
+- Estilo TikTok / Shorts
+- Frases cortas
+
+FORMATO EXACTO:
+GUION: ...
+KEYWORDS: palabra1, palabra2, palabra3, palabra4
+"""
+
     data = {
-        "model": "llama3-8b-8192",
+        "model": "llama-3.1-70b-versatile",
         "messages": [
-            {"role": "user", "content": f"Crea un guion viral de 15 segundos sobre {tema}. Formato: GUION: ... KEYWORDS: 4 palabras en inglés"}
+            {"role": "user", "content": prompt}
         ],
         "temperature": 0.9
     }
@@ -35,19 +50,29 @@ def generar_guion_y_keywords(tema):
     r = requests.post(url, headers=headers, json=data)
 
     if r.status_code != 200:
-        raise Exception(r.text)
+        raise Exception(f"❌ Error Groq: {r.text}")
 
     res = r.json()
 
     if "choices" not in res:
-        raise Exception(res)
+        raise Exception(f"❌ Respuesta inválida: {res}")
 
     text = res["choices"][0]["message"]["content"]
 
-    guion = text.split("GUION:")[1].split("KEYWORDS:")[0].strip()
-    keywords = text.split("KEYWORDS:")[1].strip().split(",")
+    try:
+        guion = text.split("GUION:")[1].split("KEYWORDS:")[0].strip()
+        keywords_raw = text.split("KEYWORDS:")[1].strip()
 
-    return guion, [k.strip() for k in keywords]
+        keywords = [k.strip() for k in keywords_raw.split(",")]
+
+        # fallback por seguridad
+        if len(keywords) < 4:
+            keywords = ["dark", "cinematic", "night", "fear"]
+
+        return guion, keywords
+
+    except Exception:
+        raise Exception(f"❌ Error parseando IA: {text}")
 
 # =========================
 # VOZ
@@ -80,7 +105,7 @@ def descargar_clips(keywords):
         clips.append(path)
 
     if not clips:
-        raise Exception("No clips found")
+        raise Exception("❌ No clips encontrados")
 
     return clips
 
@@ -109,7 +134,12 @@ def montar_video(guion, clips):
 
     out = CompositeVideoClip([final, txt])
 
-    out.write_videofile("video_final.mp4", fps=30, codec="libx264", audio_codec="aac")
+    out.write_videofile(
+        "video_final.mp4",
+        fps=30,
+        codec="libx264",
+        audio_codec="aac"
+    )
 
 # =========================
 # MAIN
@@ -119,13 +149,16 @@ async def run(tema):
 
     guion, keywords = generar_guion_y_keywords(tema)
 
+    print("🧠 GUION:", guion)
+    print("🔑 KEYWORDS:", keywords)
+
     await texto_a_voz(guion)
 
     clips = descargar_clips(keywords)
 
     montar_video(guion, clips)
 
-    print("✅ VIDEO LISTO")
+    print("✅ VIDEO GENERADO")
 
 if __name__ == "__main__":
     import sys
