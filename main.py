@@ -119,9 +119,6 @@ async def run(tema):
 
     guion, keywords = generar_guion_y_keywords(tema)
 
-    print("🧠", guion)
-    print("🔑", keywords)
-
     await texto_a_voz(guion)
 
     clips = descargar_clips(keywords)

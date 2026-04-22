@@ -1,64 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>FENIX STUDIO</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FENIX STUDIO AI VIDEO ENGINE</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Contenedor principal */
+.container {
+  width: 420px;
+  padding: 25px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+/* Título */
+h1 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+/* Inputs */
+input {
+  width: 90%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+}
+
+/* Botón */
+button {
+  width: 95%;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, #ff00cc, #3333ff);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.03);
+}
+
+/* Video */
+video {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 12px;
+}
+
+/* Estado */
+#status {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+</style>
+
 </head>
 
 <body>
 
-<h1>FENIX STUDIO AI VIDEO ENGINE v2.0</h1>
+<div class="container">
 
-<input id="idea" placeholder="Idea para el vídeo..." />
-<input id="licencia" placeholder="Introduce tu Licencia" />
+  <h1>FENIX STUDIO AI VIDEO ENGINE</h1>
 
-<button onclick="generar()">GENERAR AHORA</button>
+  <input id="idea" placeholder="Idea del vídeo..." />
+  <input id="licencia" placeholder="Licencia" />
 
-<hr>
+  <button onclick="generar()">REPRODUCIR</button>
 
-<h3>☁️ Servidor de Archivos Real</h3>
+  <p id="status">Esperando acción...</p>
 
-<video id="video" controls width="360"></video>
+  <video id="video" controls></video>
 
-<p id="status">Esperando vídeo...</p>
+</div>
 
 <script>
+
+// 🔥 cargar último vídeo
 async function cargarVideo() {
-  const res = await fetch(
-    "https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/public_url.txt?cache=" + Date.now()
-  );
+  try {
+    const res = await fetch(
+      "https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/public_url.txt?cache=" + Date.now()
+    );
 
-  const url = await res.text();
+    const url = await res.text();
 
-  if (!url.includes("http")) {
-    document.getElementById("status").innerText = "Aún no hay vídeo";
-    return;
+    if (!url.includes("http")) {
+      document.getElementById("status").innerText = "Sin vídeos aún";
+      return;
+    }
+
+    document.getElementById("video").src = url.trim();
+    document.getElementById("status").innerText = "Vídeo listo ✔";
+
+  } catch (e) {
+    document.getElementById("status").innerText = "Error cargando vídeo";
   }
-
-  document.getElementById("video").src = url.trim();
-  document.getElementById("status").innerText = "Vídeo cargado ✔";
 }
 
+// 🔥 generar vídeo
 async function generar() {
   const tema = document.getElementById("idea").value;
 
+  if (!tema) {
+    document.getElementById("status").innerText = "Escribe una idea";
+    return;
+  }
+
+  document.getElementById("status").innerText = "Generando vídeo... ⏳";
+
   await fetch("https://video-iaaa.vercel.app/api/generar", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       tema: tema,
       codigo: "VIP-FENIX"
     })
   });
 
-  document.getElementById("status").innerText = "Generando vídeo...";
-
-  setTimeout(cargarVideo, 20000);
+  // esperar generación
+  setTimeout(cargarVideo, 25000);
 }
 
 // auto load
 cargarVideo();
+
 </script>
 
 </body>
