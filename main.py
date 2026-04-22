@@ -1,4 +1,4 @@
-import argparse, os, asyncio, edge_tts, requests
+import argparse, os, asyncio, edge_tts, requests, random
 import google.generativeai as genai
 
 def tiempo_a_vtt(ms):
@@ -8,29 +8,27 @@ def tiempo_a_vtt(ms):
     return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
 
 async def fabricar_video(tema, video_id):
-    print(f"🎬 REPARANDO SUPER-PRODUCCIÓN: {tema}")
+    print(f"🎬 INICIANDO MONTAJE MULTI-IMAGEN: {tema}")
     os.makedirs("static", exist_ok=True)
     
     f_voz = f"static/voz_{video_id}.mp3"
     f_subs = f"static/subs_{video_id}.vtt"
-    f_img = f"static/fondo_{video_id}.jpg"
     f_final = f"static/{video_id}.mp4"
 
-    # 1. GUION ROBUSTO
-    guion_reserva = f"El misterio de {tema} ha permanecido oculto durante demasiado tiempo. Muchos han intentado descubrir la verdad, pero pocos han regresado con respuestas claras. Hoy exploramos las sombras de este fenómeno fascinante que desafía toda lógica conocida."
-    
+    # 1. GUION LARGO Y POTENTE
     api_key = os.environ.get("GEMINI_API_KEY")
+    guion_base = f"El misterio de {tema} es algo que desafía toda lógica. Durante décadas, se han ocultado pruebas que sugieren una realidad mucho más oscura de lo que nos han contado. ¿Estamos preparados para la verdad?"
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"Escribe un guion épico y misterioso sobre {tema}. Unas 100 palabras. Solo texto."
+        prompt = f"Escribe un guion de misterio conspiranoico sobre {tema}. Unas 120 palabras. Empieza con un gancho fuerte. Solo el texto."
         res = model.generate_content(prompt)
         guion = res.text.strip().replace('*', '').replace('"', '')
-        if len(guion.split()) < 20: guion = guion_reserva
-    except:
-        guion = guion_reserva
+        if len(guion.split()) < 30: guion = guion_base
+    except: guion = guion_base
 
-    # 2. VOZ Y SUBS
+    # 2. VOZ Y SUBS (Manual para que no fallen)
+    print("🔊 Generando voz y mapa de palabras...")
     communicate = edge_tts.Communicate(guion, "es-ES-AlvaroNeural")
     subs_vtt = ["WEBVTT\n\n"]
     with open(f_voz, "wb") as file:
@@ -42,33 +40,40 @@ async def fabricar_video(tema, video_id):
                 subs_vtt.append(f"{tiempo_a_vtt(inicio)} --> {tiempo_a_vtt(fin)}\n{chunk['text']}\n\n")
     with open(f_subs, "w", encoding="utf-8") as f: f.writelines(subs_vtt)
 
-    # 3. IMAGEN IA
-    img_url = f"https://image.pollinations.ai/prompt/epic%20cinematic%20{tema.replace(' ', '%20')}%208k%20vertical?width=720&height=1280&nologo=true"
-    with open(f_img, "wb") as f: f.write(requests.get(img_url).content)
+    # 3. GENERAR 3 IMÁGENES PARA EL MOVIMIENTO
+    print("🖼️ Generando secuencia de 3 imágenes...")
+    for i in range(1, 4):
+        seed = random.randint(1, 9999) # Cambiamos la semilla para que sean distintas
+        url = f"https://image.pollinations.ai/prompt/cinematic%20epic%20{tema.replace(' ', '%20')}%208k%20vertical?width=720&height=1280&nologo=true&seed={seed}"
+        with open(f"static/img{i}_{video_id}.jpg", "wb") as f:
+            f.write(requests.get(url).content)
+        print(f"✅ Imagen {i} lista.")
 
-    # 4. MONTAJE ESTABILIZADO (Zoom suave + Subtítulos)
-    print("🎥 Montando vídeo final...")
-    estilo = "FontName=Arial,FontSize=24,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Alignment=2,MarginV=80"
+    # 4. MONTAJE ÉPICO (3 Imágenes + Transiciones + Zoom + Subs)
+    print("🎥 Montando secuencia cinematográfica...")
+    # Estilo de subtítulos: Amarillo neón, más grandes y centrados
+    estilo = "FontName=Arial,FontSize=28,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Alignment=2,MarginV=70"
     
-    # Filtro zoompan simplificado para evitar errores de memoria
-    filtro_video = (
-        f"scale=1280:2275,zoompan=z='min(zoom+0.0015,1.5)':d=1:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=720x1280,"
-        f"subtitles='{f_subs}':force_style='{estilo}'"
-    )
-    
+    # Este comando une las 3 fotos, les da movimiento y fundido (crossfade)
     comando = (
-        f'ffmpeg -y -loop 1 -i {f_img} -i {f_voz} '
-        f'-vf "{filtro_video}" '
-        f'-c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 3.0 -movflags +faststart '
-        f'-c:a aac -shortest {f_final}'
+        f'ffmpeg -y '
+        f'-loop 1 -t 15 -i static/img1_{video_id}.jpg '
+        f'-loop 1 -t 15 -i static/img2_{video_id}.jpg '
+        f'-loop 1 -t 15 -i static/img3_{video_id}.jpg '
+        f'-i {f_voz} '
+        f'-filter_complex "[0:v]scale=1280:2275,zoompan=z=\'1.03+0.0005*in\':d=1:s=720x1280,fade=t=out:st=14:d=1[v1]; '
+        f'[1:v]scale=1280:2275,zoompan=z=\'1.03+0.0005*in\':d=1:s=720x1280,fade=t=in:st=0:d=1,fade=t=out:st=14:d=1[v2]; '
+        f'[2:v]scale=1280:2275,zoompan=z=\'1.03+0.0005*in\':d=1:s=720x1280,fade=t=in:st=0:d=1[v3]; '
+        f'[v1][v2][v3]concat=n=3:v=1:a=0,subtitles=\'{f_subs}\':force_style=\'{estilo}\'[v]" '
+        f'-map "[v]" -map 3:a -c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 3.0 -movflags +faststart -shortest {f_final}'
     )
     
     os.system(comando)
     
-    # Limpieza
-    for temp in [f_voz, f_subs, f_img]:
-        if os.path.exists(temp): os.remove(temp)
-    print(f"✅ Proceso finalizado: {f_final}")
+    # Limpieza de archivos temporales
+    for i in range(1, 4): os.remove(f"static/img{i}_{video_id}.jpg")
+    os.remove(f_voz)
+    print(f"🚀 VIDEO TERMINADO: {f_final}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
