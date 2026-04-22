@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Fénix IA - Panel Seguro</title>
+    <title>Motor Fénix IA - Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
@@ -14,14 +14,14 @@
         
         <div class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Paso 1: Tu Llave (ghp_...)</label>
-                <input type="password" id="token" placeholder="Pega aquí tu token" 
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Llave Maestra (Se guarda en este móvil)</label>
+                <input type="password" id="token" placeholder="ghp_..." 
                        class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none text-sm">
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Paso 2: ¿De qué hablamos hoy?</label>
-                <input type="text" id="tema" placeholder="Ej: Curiosidades del espacio" 
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Tema del Vídeo</label>
+                <input type="text" id="tema" placeholder="Ej: Curiosidades de los dinosaurios" 
                        class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none">
             </div>
             
@@ -31,7 +31,7 @@
         </div>
 
         <div id="status" class="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 hidden">
-            <p class="text-sm font-mono text-orange-300 text-center" id="msg">Iniciando...</p>
+            <p class="text-sm font-mono text-orange-300 text-center" id="msg"></p>
         </div>
 
         <div id="resultado" class="hidden mt-8 space-y-4">
@@ -44,17 +44,28 @@
     </div>
 
     <script>
+        // Función para cargar el token guardado al abrir la web
+        window.onload = () => {
+            const savedToken = localStorage.getItem('fénix_token');
+            if (savedToken) {
+                document.getElementById('token').value = savedToken;
+            }
+        };
+
         function generar() {
             const token = document.getElementById('token').value;
             const tema = document.getElementById('tema').value;
             const btn = document.getElementById('btn');
             const msg = document.getElementById('msg');
             
-            if(!token || !tema) return alert("⚠️ Pon el token y el tema");
+            if(!token || !tema) return alert("⚠️ Rellena todo");
+
+            // GUARDAR TOKEN PARA SIEMPRE EN ESTE NAVEGADOR
+            localStorage.setItem('fénix_token', token);
 
             btn.disabled = true;
             document.getElementById('status').classList.remove('hidden');
-            msg.innerText = "🛰️ Conectando con GitHub...";
+            msg.innerText = "🛰️ Enviando orden a GitHub...";
 
             const user = "Cristobal2929";
             const repo = "video-iaaa";
@@ -68,12 +79,12 @@
                 },
                 body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: tema } })
             }).then(res => {
-                if(!res.ok) throw new Error("Token no válido o revocado por GitHub");
+                if(!res.ok) throw new Error("Llave incorrecta");
                 
                 let seg = 60;
                 const interval = setInterval(() => {
                     seg--;
-                    msg.innerText = `⏳ Editando vídeo... ${seg}s`;
+                    msg.innerText = `⏳ Fabricando vídeo... ${seg}s`;
                     if(seg <= 0) {
                         clearInterval(interval);
                         msg.innerText = "✨ ¡LISTO!";
@@ -84,7 +95,7 @@
                     }
                 }, 1000);
             }).catch(err => {
-                alert("❌ ERROR: " + err.message + ". Seguramente GitHub anuló tu token por seguridad.");
+                alert("❌ ERROR: " + err.message);
                 btn.disabled = false;
             });
         }
