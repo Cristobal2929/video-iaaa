@@ -20,10 +20,10 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py --tema "${{ github.event.client_payload.tema }}"
-      - name: 🚀 GUARDAR EN GITHUB
+      - name: 🚀 GUARDAR EN RAMA PRINCIPAL
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add static/video_final.mp4
-          git commit -m "Video actualizado" || echo "Nada nuevo"
-          git push origin main
+          git commit -m "Video: ${{ github.event.client_payload.tema }}" || echo "Sin cambios"
+          git push origin principal

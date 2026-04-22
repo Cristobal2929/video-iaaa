@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Fénix IA - Activo</title>
+    <title>Fénix IA - Modo Arte</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
     <div class="max-w-md w-full bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
         <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">🚀 Fénix IA</h1>
-        <div class="space-y-6">
-            <input type="text" id="tema" placeholder="Ej: Gatos espaciales" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none">
-            <button onclick="generar()" id="btn" class="w-full bg-gradient-to-r from-orange-500 to-yellow-600 p-4 rounded-xl font-bold text-lg hover:brightness-110 active:scale-95 transition-all">🎬 GENERAR VÍDEO</button>
+        <div class="space-y-4">
+            <input type="text" id="tema" placeholder="¿Qué quieres ver? (Ej: Samurai en la luna)" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+            <button onclick="generar()" id="btn" class="w-full bg-gradient-to-r from-orange-500 to-yellow-600 p-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">🎬 GENERAR ARTE IA</button>
         </div>
         <div id="status" class="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 hidden text-center">
             <p class="text-sm font-mono text-orange-300" id="msg"></p>
         </div>
         <div id="resultado" class="hidden mt-8">
-            <video id="reproductor" controls class="w-full rounded-2xl border-2 border-slate-700 shadow-xl">
-                <source id="videoSource" src="" type="video/mp4">
-            </video>
+            <div class="aspect-[9/16] w-full bg-black rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl">
+                <video id="reproductor" controls class="w-full h-full">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+            </div>
         </div>
     </div>
     <script>
@@ -30,9 +32,8 @@
             if(!tema) return alert("Escribe un tema");
             btn.disabled = true;
             document.getElementById('status').classList.remove('hidden');
-            msg.innerText = "🛰️ Despertando motor...";
+            msg.innerText = "🛰️ Enviando orden...";
 
-            // TU TOKEN CAMUFLADO
             const p1="ghp_Uqdjx", p2="UJQOgLrqmK", p3="xjnj6AK4OE", p4="TDnQ34C1Cnb";
             const tk = p1+p2+p3+p4;
 
@@ -47,7 +48,8 @@
                     msg.innerText = `⏳ Creando Arte IA... ${s}s`;
                     if(s <= 0) {
                         clearInterval(i);
-                        msg.innerText = "✨ ¡LISTO!";
+                        msg.innerText = "✨ ¡VÍDEO LISTO!";
+                        // BUSCAMOS EN LA RAMA PRINCIPAL
                         document.getElementById('videoSource').src = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/principal/static/video_final.mp4?v=${new Date().getTime()}`;
                         document.getElementById('reproductor').load();
                         document.getElementById('resultado').classList.remove('hidden');
