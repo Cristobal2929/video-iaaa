@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Instalar librerías
+      - name: Instalar librerias
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install google-generativeai edge-tts requests
@@ -22,17 +22,8 @@ jobs:
         run: python main.py --tema "${{ github.event.client_payload.tema }}"
       - name: 📦 FORZAR SUBIDA DE VÍDEO
         run: |
-          # 1. Comprobamos si el video existe de verdad (Chivato)
-          ls -la static/ || echo "⚠️ La carpeta static no existe"
-          
-          # 2. Configuramos el bot
           git config --global user.name "Motor Fenix"
           git config --global user.email "bot@fenix.com"
-          
-          # 3. Borramos cualquier bloqueo temporal
-          rm -f .gitignore
-          
-          # 4. Forzamos la subida obligatoria
           git add static/video_final.mp4 -f
-          git commit -m "Video: ${{ github.event.client_payload.tema }}" --allow-empty
+          git commit -m "Video: ${{ github.event.client_payload.tema }}" || echo "Sin cambios"
           git push origin main --force
