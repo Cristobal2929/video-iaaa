@@ -1,99 +1,26 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fénix IA - Professional Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <title>FENIX STUDIO</title>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col items-center p-6">
-    <div class="max-w-md w-full bg-zinc-900 p-10 rounded-[3rem] shadow-2xl border border-zinc-800 text-center mb-6">
-        <h1 class="text-4xl font-black italic tracking-tighter mb-2">FENIX <span class="text-orange-500">STUDIO</span></h1>
-        <p class="text-zinc-500 text-[10px] uppercase tracking-[0.3em] mb-10">AI Video Engine v2.0</p>
-        <div class="space-y-4">
-            <input type="text" id="tema" placeholder="Idea para el vídeo..." class="w-full p-5 rounded-2xl bg-black border border-zinc-800 focus:border-orange-500 outline-none text-center text-sm transition-all">
-            <input type="text" id="codigo" placeholder="Introduce tu Licencia" class="w-full p-4 rounded-2xl bg-zinc-800/50 border border-zinc-800 focus:border-orange-500 outline-none text-center text-xs text-orange-400 font-mono tracking-widest">
-            <button onclick="enviarOrden()" id="btn" class="w-full bg-white text-black p-5 rounded-2xl font-black hover:bg-orange-500 hover:text-white transition-all active:scale-95 shadow-xl shadow-white/5">GENERAR AHORA</button>
-        </div>
-        
-        <div id="status" class="mt-8 hidden">
-            <p id="msg" class="text-xs text-orange-500 animate-pulse font-bold uppercase"></p>
-        </div>
-        
-        <div id="reproductor-box" class="mt-8 hidden animate-in zoom-in duration-700">
-            <video id="player" controls playsinline class="w-full aspect-[9/16] rounded-3xl border-4 border-zinc-800 shadow-2xl bg-black object-cover"></video>
-            <p class="text-[10px] text-zinc-500 mt-4 uppercase tracking-widest">Vídeo generado con éxito</p>
-        </div>
-    </div>
+<body>
 
-    <div class="max-w-md w-full bg-zinc-900/50 p-6 rounded-[2rem] border border-zinc-800/50">
-        <h2 class="text-xs font-bold mb-4 text-zinc-500 uppercase tracking-widest text-center text-orange-500">☁️ Servidor de Archivos Real</h2>
-        <div id="lista-historial" class="grid grid-cols-1 gap-2 text-center text-zinc-600 text-[10px]">Cargando nube...</div>
-    </div>
+<h1>FENIX STUDIO AI VIDEO ENGINE</h1>
 
-    <script>
-        window.onload = cargarHistorialNube;
+<video id="video" controls width="300"></video>
 
-        function cargarHistorialNube() {
-            fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/contents/static')
-            .then(res => res.json())
-            .then(data => {
-                const videos = data.filter(file => file.name.endsWith('.mp4'));
-                const l = document.getElementById('lista-historial');
-                if(videos.length === 0) {
-                    l.innerHTML = "No hay archivos en la nube.";
-                    return;
-                }
-                l.innerHTML = videos.reverse().map(v => `
-                    <button onclick="verVideo('${v.name}')" class="w-full text-left p-4 bg-black rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-orange-500 transition-all flex justify-between items-center">
-                        <span>🎥 ${v.name}</span>
-                        <span class="text-orange-500 py-1 px-2 bg-zinc-900 rounded-md">REPRODUCIR</span>
-                    </button>
-                `).join('');
-            })
-            .catch(() => {
-                document.getElementById('lista-historial').innerHTML = "Repositorio Privado o Error de Conexión";
-            });
-        }
+<br>
 
-        function enviarOrden() {
-            const tema = document.getElementById('tema').value;
-            const codigo = document.getElementById('codigo').value.trim().toUpperCase();
-            const id = "vid_" + Date.now();
-            if(!tema || !codigo) return alert("Faltan datos");
-            
-            document.getElementById('status').classList.remove('hidden');
-            document.getElementById('msg').innerText = "Motor en marcha... espera 2 minutos.";
-            
-            fetch('/api/generar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ tema, id, codigo })
-            }).then(() => {
-                setTimeout(() => intentarCargar(id), 60000); // Espera 1 minuto antes de buscarlo
-            });
-        }
+<button onclick="loadVideo()">REPRODUCIR</button>
 
-        function intentarCargar(id) {
-            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?t=${Date.now()}`;
-            const p = document.getElementById('player');
-            p.src = url;
-            p.load();
-            p.oncanplay = () => {
-                document.getElementById('reproductor-box').classList.remove('hidden');
-                document.getElementById('status').classList.add('hidden');
-                p.play();
-                cargarHistorialNube();
-            };
-            p.onerror = () => {
-                document.getElementById('msg').innerText = "Sincronizando con la nube... (Paciencia)";
-                setTimeout(() => intentarCargar(id), 10000);
-            };
-        }
+<script>
+async function loadVideo() {
+  const res = await fetch("https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/public_url.txt");
+  const url = await res.text();
 
-        function verVideo(nombre) {
-            intentarCargar(nombre.replace('.mp4', ''));
-        }
-    </script>
+  document.getElementById("video").src = url.trim();
+}
+</script>
+
 </body>
 </html>
