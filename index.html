@@ -3,82 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fénix IA - Modo Leyenda</title>
+    <title>Fénix IA - Professional Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center font-sans">
+<body class="bg-black text-white min-h-screen flex flex-col items-center p-6">
 
-    <div class="max-w-md w-full bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800 text-center mb-6 shadow-2xl">
-        <h1 class="text-3xl font-black mb-2 tracking-tighter text-white italic">FENIX <span class="text-orange-500">PRO</span></h1>
-        <p class="text-zinc-500 text-xs mb-8 uppercase tracking-widest">Motor Cinematográfico V2V</p>
-        
-        <input type="text" id="tema" placeholder="¿Sobre qué quieres el vídeo?" class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500 text-center">
-        
-        <input type="password" id="github_token" placeholder="Pega tu Token de GitHub aquí" class="w-full p-3 rounded-xl bg-black border border-zinc-800 mb-4 text-xs text-center text-zinc-400">
-        
-        <button onclick="generar()" id="btn" class="w-full bg-orange-600 text-white p-5 rounded-2xl font-black hover:bg-orange-500 active:scale-95 transition-all shadow-lg shadow-orange-900/20">CREAR OBRA MAESTRA</button>
-        
-        <div id="status" class="mt-8 hidden">
-            <div id="consola" class="bg-black border border-zinc-800 rounded-2xl p-4 text-left font-mono text-[10px] text-green-500 h-32 overflow-y-auto space-y-1 mb-4"></div>
-            <div class="flex items-center justify-center space-x-2">
-                <div class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
-                <p class="text-orange-400 font-mono text-xs uppercase font-bold">Procesando...</p>
-            </div>
+    <div class="max-w-md w-full bg-zinc-900 p-10 rounded-[3rem] shadow-2xl border border-zinc-800 text-center">
+        <h1 class="text-4xl font-black italic tracking-tighter mb-2">FENIX <span class="text-orange-500">STUDIO</span></h1>
+        <p class="text-zinc-500 text-[10px] uppercase tracking-[0.3em] mb-10">AI Video Engine v2.0</p>
+
+        <div class="space-y-4">
+            <input type="text" id="tema" placeholder="Idea para el vídeo..." class="w-full p-5 rounded-2xl bg-black border border-zinc-800 focus:border-orange-500 outline-none text-center text-sm transition-all">
+            
+            <input type="text" id="codigo" placeholder="Introduce tu Licencia" class="w-full p-4 rounded-2xl bg-zinc-800/50 border border-zinc-800 focus:border-orange-500 outline-none text-center text-xs text-orange-400 font-mono tracking-widest">
+            
+            <button onclick="enviarOrden()" id="btn" class="w-full bg-white text-black p-5 rounded-2xl font-black hover:bg-orange-500 hover:text-white transition-all active:scale-95 shadow-xl shadow-white/5">GENERAR AHORA</button>
         </div>
 
-        <div id="resultado" class="hidden mt-8">
-            <div class="aspect-[9/16] bg-black rounded-[2rem] overflow-hidden shadow-2xl border-4 border-zinc-800">
-                <video id="reproductor" controls playsinline class="w-full h-full object-cover">
-                    <source id="videoSource" src="" type="video/mp4">
-                </video>
-            </div>
+        <div id="status" class="mt-8 hidden">
+            <p id="msg" class="text-xs text-orange-500 animate-pulse font-bold uppercase"></p>
+        </div>
+
+        <div id="reproductor-box" class="mt-8 hidden animate-in zoom-in duration-700">
+            <video id="player" controls class="w-full aspect-[9/16] rounded-3xl border-4 border-zinc-800 shadow-2xl bg-black object-cover"></video>
         </div>
     </div>
 
     <script>
-        function escribir(t) {
-            const c = document.getElementById('consola');
-            c.innerHTML += `<div>> ${t}</div>`;
-            c.scrollTop = c.scrollHeight;
-        }
-
-        function generar() {
-            const t = document.getElementById('tema').value;
-            const tk = document.getElementById('github_token').value;
-            if(!t || !tk) { alert("Falta el tema o el Token"); return; }
+        function enviarOrden() {
+            const tema = document.getElementById('tema').value;
+            const codigo = document.getElementById('codigo').value;
+            const id = "vid_" + Date.now();
             
-            const videoId = "vid_" + Date.now();
+            if(!tema || !codigo) return alert("Completa todos los campos");
+
             document.getElementById('status').classList.remove('hidden');
-            document.getElementById('btn').disabled = true;
+            document.getElementById('msg').innerText = "Validando Licencia...";
 
-            escribir("SOLICITANDO RENDER A GITHUB...");
-            
-            fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
-                method: 'POST', 
-                headers: { 'Authorization': `token ${tk}`, 'Accept': 'application/vnd.github.v3+json' },
-                body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t, id: videoId } })
-            }).then(res => {
-                if(res.ok) {
-                    escribir("PETICIÓN ACEPTADA. ESPERA 3-5 MINUTOS.");
-                    setTimeout(() => intentarCargar(videoId), 120000);
+            fetch('/api/generar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ tema, id, codigo })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) {
+                    document.getElementById('msg').innerText = "ERROR: " + data.error;
                 } else {
-                    escribir("ERROR: TOKEN INVÁLIDO O REPOSITORIO NO ENCONTRADO.");
+                    document.getElementById('msg').innerText = "VÍDEO EN PROCESO... ESPERA 3 MINUTOS.";
+                    setTimeout(() => cargarVideo(id), 120000);
                 }
             });
         }
 
-        function intentarCargar(id) {
+        function cargarVideo(id) {
             const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?v=${Math.random()}`;
-            const v = document.getElementById('reproductor');
-            document.getElementById('videoSource').src = url;
-            v.load();
-            v.oncanplay = () => {
-                document.getElementById('resultado').classList.remove('hidden');
+            const p = document.getElementById('player');
+            p.src = url;
+            p.load();
+            p.oncanplay = () => {
+                document.getElementById('reproductor-box').classList.remove('hidden');
                 document.getElementById('status').classList.add('hidden');
-                document.getElementById('btn').disabled = false;
-                v.play();
+                p.play();
             };
-            v.onerror = () => setTimeout(() => intentarCargar(id), 10000);
+            p.onerror = () => setTimeout(() => cargarVideo(id), 10000);
         }
     </script>
 </body>
