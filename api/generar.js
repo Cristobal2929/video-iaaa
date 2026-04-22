@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      event_type: 'generar_video_viral',
+      event_type: 'generar_video',
       client_payload: { tema, id }
     })
   });
