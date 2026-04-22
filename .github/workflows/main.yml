@@ -2,47 +2,34 @@ name: Generar Video Viral
 
 on:
   repository_dispatch:
-    types: [generar_video_viral]
+    types: [generar_video]
 
 jobs:
-  construir:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - name: Descargar código
-        uses: actions/checkout@v4
+      - name: Clonar repo
+        uses: actions/checkout@v3
 
-      - name: 🛠️ Instalar Magia de Edición
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg imagemagick
-          # Desbloquear ImageMagick para que pueda escribir texto
-          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
-
-      - name: 🐍 Configurar Python
-        uses: actions/setup-python@v5
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-          cache: 'pip'
+          python-version: "3.10"
 
-      - name: 📦 Instalar Librerías
-        run: pip install -r requirements.txt
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
 
-      - name: 🚀 EJECUTAR MOTOR LEYENDA
+      - name: Ejecutar motor IA
         env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}"
+          python main.py --tema "${{ github.event.client_payload.tema }}"
 
-      - name: 📦 GUARDAR EN EL HISTORIAL
-        run: |
-          mkdir -p static
-          mv video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
-          git config --global user.name "Fenix Studio"
-          git config --global user.email "bot@fenixstudio.com"
-          git add -f static/*.mp4
-          git commit -m "🎬 Vídeo Pro: ${{ github.event.client_payload.id }}"
-          git pull origin main --rebase || true
-          git push origin main
+      - name: Subir vídeo
+        uses: actions/upload-artifact@v4
+        with:
+          name: video_final
+          path: video_final.mp4
