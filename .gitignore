@@ -1,0 +1,11 @@
+workspaces/
+core/
+centro/
+motor/
+*.m4a
+*.mp3
+*.mp4
+!static/video_final.mp4
+!static/voz.mp3
+.venv/
+__pycache__/

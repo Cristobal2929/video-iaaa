@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FENIX AI - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: #e5e5e5; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; }
+        .btn-primary { background: linear-gradient(135deg, #ccff00 0%, #a3cc00 100%); color: #000; font-weight: 800; transition: transform 0.2s; }
+        .btn-primary:hover { transform: scale(1.02); }
+        .status-completed { color: #22c55e; background: rgba(34, 197, 94, 0.1); border-radius: 8px; padding: 2px 8px; }
+        .status-processing { color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-radius: 8px; padding: 2px 8px; animation: pulse 2s infinite; }
+        .status-error { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 2px 8px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="p-4 max-w-md mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-extrabold tracking-tighter text-white">FENIX <span class="text-[#ccff00]">AI</span></h1>
+        <div class="glass-card px-4 py-2 flex items-center gap-2">
+            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Créditos</span>
+            <span class="text-[#ccff00] font-bold">🪙 999.993</span>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 mb-6">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🚀 Crear Proyecto</h2>
+        <form action="/create" method="POST" class="flex flex-col gap-3">
+            <input type="text" name="name" placeholder="Nombre del tema..." 
+                class="w-full bg-[#141414] border border-gray-800 rounded-xl px-4 py-3 focus:outline-none focus:border-[#ccff00] transition-all">
+            <button class="btn-primary w-full py-3 rounded-xl uppercase text-xs tracking-widest">Generar Video Viral</button>
+        </form>
+    </div>
+
+    <div class="glass-card p-5 mb-8 border-l-2 border-[#ccff00]">
+        <h2 class="text-sm font-bold mb-1 flex items-center gap-2 text-white">💎 Recargar Créditos</h2>
+        <p class="text-[11px] text-gray-500 mb-3">USDT (TRC20) - 10 créditos / $5</p>
+        <div class="bg-black/40 p-3 rounded-lg border border-gray-800 select-all cursor-pointer">
+            <code class="text-[10px] text-gray-400 break-all">TQjkoLc5wfSQHRhgL5EFugrvpr3JFuYepB</code>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-between mb-4 px-1">
+        <h2 class="text-md font-bold">🎬 Historial</h2>
+        <span class="text-[10px] text-gray-500 uppercase tracking-widest">Últimos 10</span>
+    </div>
+    
+    <div class="space-y-3">
+        <div class="glass-card p-4 flex justify-between items-center">
+            <div>
+                <p class="text-sm font-bold text-white">Misterios de Egipto</p>
+                <span class="status-completed text-[9px] font-extrabold uppercase">Completado</span>
+            </div>
+            <button class="bg-[#ccff00] text-black p-2.2 rounded-lg font-bold text-xs">Descargar</button>
+        </div>
+
+        <div class="glass-card p-4 flex justify-between items-center">
+            <div>
+                <p class="text-sm font-bold text-white">Curiosidades IA</p>
+                <span class="status-processing text-[9px] font-extrabold uppercase">Procesando...</span>
+            </div>
+            <div class="w-5 h-5 border-2 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    </div>
+</body>
+</html>

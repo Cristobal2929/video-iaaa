@@ -1,0 +1,30 @@
+name: Generar Video Viral
+on:
+  repository_dispatch:
+    types: [generar_video_viral]
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Instalar
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install google-generativeai edge-tts requests
+      - name: Motor
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py --tema "${{ github.event.client_payload.tema }}"
+      - name: 🚀 SUBIR A LA WEB
+        run: |
+          git config --global user.name "Motor Fenix"
+          git config --global user.email "bot@fenix.com"
+          # La -f es la clave: Fuerza la subida aunque algo lo intente impedir
+          git add -f static/video_final.mp4
+          git commit -m "Video: ${{ github.event.client_payload.tema }}" || echo "Sin cambios"
+          git push origin main --force

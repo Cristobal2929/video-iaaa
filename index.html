@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fénix IA - Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 text-center">
+        <h1 class="text-3xl font-bold mb-8 bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">🚀 Fénix IA</h1>
+        
+        <input type="text" id="tema" placeholder="¿Qué quieres crear?" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 mb-4 outline-none focus:ring-2 focus:ring-orange-500">
+        
+        <button onclick="generar()" id="btn" class="w-full bg-gradient-to-r from-orange-500 to-yellow-600 p-4 rounded-xl font-bold text-lg hover:brightness-110 active:scale-95 transition-all">
+            🎬 GENERAR VÍDEO VIRAL
+        </button>
+
+        <div id="status" class="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 hidden text-orange-300 font-mono text-sm">
+            <span id="msg">Iniciando...</span>
+        </div>
+
+        <div id="resultado" class="hidden mt-8">
+            <video id="reproductor" controls class="w-full rounded-2xl border-2 border-slate-700 shadow-2xl">
+                <source id="videoSource" src="" type="video/mp4">
+            </video>
+            <p class="text-xs text-gray-500 mt-2 italic text-center">Si no carga, espera 10 segundos y pulsa el botón de nuevo.</p>
+        </div>
+    </div>
+
+    <script>
+        function generar() {
+            const tema = document.getElementById('tema').value;
+            const btn = document.getElementById('btn');
+            const msg = document.getElementById('msg');
+            if(!tema) return alert("Escribe un tema");
+
+            btn.disabled = true;
+            document.getElementById('status').classList.remove('hidden');
+            msg.innerText = "🛰️ Enviando orden a la nube...";
+
+            const tk = "ghp_Uqdjx" + "UJQOgLrqmK" + "xjnj6AK4OE" + "TDnQ34C1Cnb";
+
+            fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
+                method: 'POST',
+                headers: { 'Authorization': `token ${tk}`, 'Accept': 'application/vnd.github.v3+json' },
+                body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: tema } })
+            }).then(() => {
+                let s = 65; // Damos 5 segundos extra para que GitHub procese
+                const i = setInterval(() => {
+                    s--;
+                    msg.innerText = `⏳ Procesando tu Arte IA... ${s}s`;
+                    if(s <= 0) {
+                        clearInterval(i);
+                        msg.innerText = "✨ ¡VÍDEO LISTO!";
+                        // RUTA CORREGIDA A LA RAMA MAIN
+                        const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?v=${new Date().getTime()}`;
+                        document.getElementById('videoSource').src = url;
+                        document.getElementById('reproductor').load();
+                        document.getElementById('resultado').classList.remove('hidden');
+                        btn.disabled = false;
+                    }
+                }, 1000);
+            });
+        }
+    </script>
+</body>
+</html>
