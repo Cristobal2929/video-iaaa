@@ -9,3 +9,7 @@ motor/
 !static/voz.mp3
 .venv/
 __pycache__/
+fenix_backup.tar.gz
+*.tar.gz
+*.mp4
+node_modules/
