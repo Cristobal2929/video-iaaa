@@ -1,49 +1,70 @@
 import os
-import sys
+import asyncio
 import argparse
 import requests
-import random
+import google.generativeai as genai
+import edge_tts
+from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--tema', type=str, required=True)
-    parser.add_argument('--id', type=str, required=True)
-    args = parser.parse_args()
+# Configuración de APIs
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+PEXELS_API = os.getenv("PEXELS_API_KEY")
 
-    api_key = os.getenv('PEXELS_API_KEY')
-    print(f"🎬 Buscando vídeos para: {args.tema}")
+async def generar_guion_y_keywords(tema):
+    model = genai.GenerativeModel('gemini-pro')
+    prompt = f"Escribe una historia de terror de 15 segundos sobre {tema}. Devuelve SOLO este formato: GUION: (texto corto) | KEYWORDS: (4 palabras en ingles separadas por comas)"
+    response = model.generate_content(prompt).text
+    guion = response.split("GUION:")[1].split("|")[0].strip()
+    keywords = response.split("KEYWORDS:")[1].strip().split(",")
+    return guion, [k.strip() for k in keywords]
 
-    # Diccionario rápido de traducción para que Pexels siempre encuentre algo
-    # Si no está en la lista, usará el tema original
-    busqueda = args.tema
-    if "miedo" in args.tema.lower(): busqueda = "horror"
-    if "gato" in args.tema.lower(): busqueda = "cats"
-    if "coche" in args.tema.lower(): busqueda = "cars"
-    if "playa" in args.tema.lower(): busqueda = "beach"
+async def texto_a_voz(texto):
+    communicate = edge_tts.Communicate(texto, "es-ES-AlvaroNeural")
+    await communicate.save("voz.mp3")
 
-    headers = {"Authorization": api_key}
-    url = f"https://api.pexels.com/videos/search?query={busqueda}&per_page=3&orientation=portrait"
+def descargar_clips(keywords):
+    paths = []
+    headers = {"Authorization": PEXELS_API}
+    for i, k in enumerate(keywords):
+        url = f"https://api.pexels.com/videos/search?query={k}&per_page=1&orientation=portrait"
+        res = requests.get(url, headers=headers).json()
+        video_url = res['videos'][0]['video_files'][0]['link']
+        path = f"clip_{i}.mp4"
+        with open(path, "wb") as f:
+            f.write(requests.get(video_url).content)
+        paths.append(path)
+    return paths
+
+def montar_video(guion, clips_paths):
+    audio = AudioFileClip("voz.mp3")
+    duracion_por_clip = audio.duration / len(clips_paths)
     
-    try:
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        
-        # Cogemos el primer vídeo que encontremos
-        video_url = data['videos'][0]['video_files'][0]['link']
-        print(f"✅ Vídeo encontrado: {video_url}")
-        
-        # Lo descargamos de verdad
-        v_data = requests.get(video_url).content
-        with open("video_final.mp4", "wb") as f:
-            f.write(v_data)
-        
-        print("🚀 Vídeo descargado y guardado correctamente.")
+    final_clips = []
+    for p in clips_paths:
+        # Cortamos y ajustamos cada clip a la pantalla del móvil (vertical)
+        clip = VideoFileClip(p).resize(height=1920).set_duration(duracion_por_clip).set_fps(30)
+        final_clips.append(clip)
+    
+    video = concatenate_videoclips(final_clips).set_audio(audio)
+    
+    # Subtítulos automáticos centrados
+    txt = TextClip(guion, fontsize=50, color='yellow', font='Arial', method='caption', 
+                   size=(video.w*0.8, None)).set_duration(audio.duration).set_position('center')
+    
+    result = CompositeVideoClip([video, txt])
+    result.write_videofile("video_final.mp4", codec="libx264", audio_codec="aac", fps=30)
 
-    except Exception as e:
-        print(f"❌ Error: No se pudo obtener el vídeo. {str(e)}")
-        # Creamos un pequeño archivo de error para no dejarlo en 0 bytes
-        with open("video_final.mp4", "w") as f:
-            f.write("Error: Pexels no encontró resultados.")
+async def ejecutar_todo(tema):
+    print(f"🎬 Iniciando producción: {tema}")
+    guion, keywords = await generar_guion_y_keywords(tema)
+    await texto_a_voz(guion)
+    paths = descargar_clips(keywords)
+    montar_video(guion, paths)
+    print("✅ Vídeo terminado con éxito.")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--tema', type=str)
+    parser.add_argument('--id', type=str) # Recibimos el ID aunque no lo usemos en el nombre interno
+    args = parser.parse_args()
+    asyncio.run(ejecutar_todo(args.tema))

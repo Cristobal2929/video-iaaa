@@ -13,45 +13,36 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: ⚡ Instalar Editor de Vídeo Rápido
-        uses: FedericoCarboni/setup-ffmpeg@v3
+      - name: 🛠️ Instalar Magia de Edición
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg imagemagick
+          # Desbloquear ImageMagick para que pueda escribir texto
+          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
 
-      - name: 🧠 Configurar Python con MEMORIA
+      - name: 🐍 Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' 
+          cache: 'pip'
 
-      - name: Instalar Librerías (Desde la memoria)
-        run: pip install -r requirements.txt || true
+      - name: 📦 Instalar Librerías
+        run: pip install -r requirements.txt
 
       - name: 🚀 EJECUTAR MOTOR LEYENDA
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}" || echo "Fin del script"
+          python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}"
 
       - name: 📦 GUARDAR EN EL HISTORIAL
         run: |
           mkdir -p static
-          
-          # Mover y renombrar
-          if [ -f "video_final.mp4" ]; then
-            mv video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
-          elif [ -f "static/video_final.mp4" ]; then
-            mv static/video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
-          fi
-          
-          # Configurar identidad del robot
+          mv video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
           git config --global user.name "Fenix Studio"
           git config --global user.email "bot@fenixstudio.com"
-          
-          # 1. FORZAR (-f) a añadir el vídeo saltándose el .gitignore
           git add -f static/*.mp4
-          
-          # 2. Empaquetar el vídeo (Hacer el commit) PRIMERO
-          git commit -m "🎬 Vídeo listo: ${{ github.event.client_payload.id }}" || echo "No se encontró el vídeo"
-          
-          # 3. Sincronizar con la nube y subir
+          git commit -m "🎬 Vídeo Pro: ${{ github.event.client_payload.id }}"
           git pull origin main --rebase || true
           git push origin main
