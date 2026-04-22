@@ -7,31 +7,29 @@ def tiempo_a_ass(segundos):
     return f"{int(h)}:{int(m):02d}:{s:05.2f}"
 
 async def fabricar_video(tema, video_id):
-    print(f"🔱 INICIANDO MODO LEYENDA: {tema}")
+    print(f"🔱 MODO LEYENDA ACTIVADO: {tema}")
     os.makedirs("static", exist_ok=True)
     f_voz, f_subs, f_raw, f_music, f_final = "voz.mp3", "subs.ass", "raw.mp4", "music.mp3", f"static/{video_id}.mp4"
 
-    # 1. GUIONISTA DE ÉLITE
+    # 1. GUIONISTA GEMINI (120 palabras)
     api_key = os.environ.get("GEMINI_API_KEY")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
-    prompt = f"Escribe un guion épico para un video de 60 segundos sobre {tema}. Estilo: Documental de suspenso. Frases de máximo 5 palabras. Sin asteriscos. Empieza con un gancho brutal."
+    prompt = f"Crea un guion cinematográfico para un video de 60 segundos sobre {tema}. Estilo oscuro, frases impactantes de máximo 6 palabras. Sin asteriscos. Empieza con un secreto que nadie sepa."
     try:
         res = model.generate_content(prompt)
         guion = res.text.strip().replace("*", "").replace('"', '')
     except:
-        guion = f"Lo que vas a ver sobre {tema} no tiene explicación. Prepárate para entrar en lo desconocido."
+        guion = f"El misterio de {tema} es algo que desafía la realidad. Prepárate para descubrir la verdad oculta."
 
-    # 2. VOZ + SUBS KARAOKE PRO
+    # 2. VOZ + SUBS KARAOKE
     communicate = edge_tts.Communicate(guion, "es-ES-AlvaroNeural")
     subs_data = []
     with open(f_voz, "wb") as f:
         async for chunk in communicate.stream():
             if chunk["type"] == "audio": f.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
-                inicio = chunk["offset"]/10000000
-                duracion = chunk["duration"]/10000000
-                fin = inicio + duracion
+                inicio, fin = chunk["offset"]/10000000, (chunk["offset"]+chunk["duration"])/10000000
                 palabra = chunk["text"].upper()
                 subs_data.append(f"Dialogue: 0,{tiempo_a_ass(inicio)},{tiempo_a_ass(fin)},Default,,0,0,0,,{{\\c&H00FFFFFF&\\bord5\\shad3\\b1}}{palabra}")
 
@@ -39,24 +37,21 @@ async def fabricar_video(tema, video_id):
         f.write("[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment\nStyle: Default,Arial,45,&H00FFFFFF,&H00000000,1,5,2,2\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
         f.write("\n".join(subs_data))
 
-    # 3. PEXELS API (Metraje 4K)
+    # 3. PEXELS (Metraje Real)
     pex_key = os.environ.get("PEXELS_API_KEY")
     headers = {"Authorization": pex_key}
-    print("🎥 Buscando metraje de alta gama...")
     try:
         r = requests.get(f"https://api.pexels.com/videos/search?query={tema}&per_page=1&orientation=portrait", headers=headers).json()
         video_url = r['videos'][0]['video_files'][0]['link']
     except:
         video_url = "https://assets.mixkit.co/videos/preview/mixkit-stars-in-the-deep-space-34554-large.mp4"
-
     with open(f_raw, "wb") as f: f.write(requests.get(video_url).content)
 
-    # 4. MÚSICA DE SUSPENSE
+    # 4. MÚSICA
     music_url = "https://cdn.pixabay.com/download/audio/2022/10/19/audio_suspense.mp3"
     with open(f_music, "wb") as f: f.write(requests.get(music_url).content)
 
-    # 5. RENDER CINEMATOGRÁFICO
-    print("🏗️ Renderizando obra maestra...")
+    # 5. RENDER CINEMATOGRÁFICO (El toque que vuela la cabeza)
     cmd = (
         f'ffmpeg -y -i {f_raw} -i {f_voz} -i {f_music} '
         f'-filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,'
@@ -66,9 +61,9 @@ async def fabricar_video(tema, video_id):
     )
     os.system(cmd)
     
+    # Limpiar temporales
     for f in [f_voz, f_subs, f_raw, f_music]:
         if os.path.exists(f): os.remove(f)
-    print(f"🔱 VÍDEO COMPLETADO: {f_final}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
