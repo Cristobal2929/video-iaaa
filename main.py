@@ -36,7 +36,7 @@ async def fabricar_video(tema, video_id):
         f.write("[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment\nStyle: Default,Arial,45,&H00FFFFFF,&H00000000,1,5,2,2\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
         f.write("\n".join(subs_data))
 
-    # 3. PEXELS (Usa la clave secreta de GitHub)
+    # 3. PEXELS (Recoge la clave de los secretos de GitHub)
     pex_key = os.environ.get("PEXELS_API_KEY")
     headers = {"Authorization": pex_key}
     try:
@@ -46,7 +46,7 @@ async def fabricar_video(tema, video_id):
         video_url = "https://assets.mixkit.co/videos/preview/mixkit-stars-in-the-deep-space-34554-large.mp4"
     with open(f_raw, "wb") as f: f.write(requests.get(video_url).content)
 
-    # 4. MÚSICA Y RENDER
+    # 4. MÚSICA Y RENDER PROFESIONAL
     music_url = "https://cdn.pixabay.com/download/audio/2022/10/19/audio_suspense.mp3"
     with open("music.mp3", "wb") as f: f.write(requests.get(music_url).content)
 

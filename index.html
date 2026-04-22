@@ -13,36 +13,29 @@
         <p class="text-zinc-500 text-xs mb-8 uppercase tracking-widest">Motor Cinematográfico V2V</p>
         
         <input type="text" id="tema" placeholder="¿Sobre qué quieres el vídeo?" class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500 text-center">
+        
+        <input type="password" id="github_token" placeholder="Pega tu Token de GitHub aquí" class="w-full p-3 rounded-xl bg-black border border-zinc-800 mb-4 text-xs text-center text-zinc-400">
+        
         <button onclick="generar()" id="btn" class="w-full bg-orange-600 text-white p-5 rounded-2xl font-black hover:bg-orange-500 active:scale-95 transition-all shadow-lg shadow-orange-900/20">CREAR OBRA MAESTRA</button>
         
         <div id="status" class="mt-8 hidden">
-            <div id="consola" class="bg-black border border-zinc-800 rounded-2xl p-4 text-left font-mono text-[10px] text-green-500 h-32 overflow-y-auto space-y-1 mb-4">
-                </div>
+            <div id="consola" class="bg-black border border-zinc-800 rounded-2xl p-4 text-left font-mono text-[10px] text-green-500 h-32 overflow-y-auto space-y-1 mb-4"></div>
             <div class="flex items-center justify-center space-x-2">
                 <div class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
-                <p id="msg" class="text-orange-400 font-mono text-xs uppercase font-bold">Procesando metraje...</p>
+                <p class="text-orange-400 font-mono text-xs uppercase font-bold">Procesando...</p>
             </div>
         </div>
 
-        <div id="resultado" class="hidden mt-8 animate-in fade-in zoom-in duration-500">
+        <div id="resultado" class="hidden mt-8">
             <div class="aspect-[9/16] bg-black rounded-[2rem] overflow-hidden shadow-2xl border-4 border-zinc-800">
                 <video id="reproductor" controls playsinline class="w-full h-full object-cover">
                     <source id="videoSource" src="" type="video/mp4">
                 </video>
             </div>
-            <button onclick="location.reload()" class="mt-4 text-zinc-500 text-xs underline">¿No se ve? Refrescar página</button>
         </div>
     </div>
 
-    <div class="max-w-md w-full bg-zinc-900/50 p-6 rounded-[2rem] border border-zinc-800/50">
-        <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">🎬 Últimas creaciones</h2>
-        <div id="lista-historial" class="grid grid-cols-1 gap-2"></div>
-    </div>
-
     <script>
-        let historial = JSON.parse(localStorage.getItem('fenix_v2v_logs')) || [];
-        actualizarUI();
-
         function escribir(t) {
             const c = document.getElementById('consola');
             c.innerHTML += `<div>> ${t}</div>`;
@@ -51,68 +44,41 @@
 
         function generar() {
             const t = document.getElementById('tema').value;
-            if(!t) return;
+            const tk = document.getElementById('github_token').value;
+            if(!t || !tk) { alert("Falta el tema o el Token"); return; }
             
             const videoId = "vid_" + Date.now();
             document.getElementById('status').classList.remove('hidden');
-            document.getElementById('resultado').classList.add('hidden');
             document.getElementById('btn').disabled = true;
-            document.getElementById('consola').innerHTML = "";
 
-            escribir("CONECTANDO CON GITHUB ACTIONS...");
+            escribir("SOLICITANDO RENDER A GITHUB...");
             
-            const tk = "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";
             fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
-                method: 'POST', headers: { 'Authorization': `token ${tk}` },
+                method: 'POST', 
+                headers: { 'Authorization': `token ${tk}`, 'Accept': 'application/vnd.github.v3+json' },
                 body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t, id: videoId } })
+            }).then(res => {
+                if(res.ok) {
+                    escribir("PETICIÓN ACEPTADA. ESPERA 3-5 MINUTOS.");
+                    setTimeout(() => intentarCargar(videoId), 120000);
+                } else {
+                    escribir("ERROR: TOKEN INVÁLIDO O REPOSITORIO NO ENCONTRADO.");
+                }
             });
-
-            historial.unshift({ id: videoId, tema: t });
-            localStorage.setItem('fenix_v2v_logs', JSON.stringify(historial));
-            actualizarUI();
-
-            escribir("SOLICITUD ENVIADA CON ÉXITO.");
-            escribir("MODO LEYENDA ACTIVADO.");
-            setTimeout(() => escribir("BUSCANDO METRAJE EN PEXELS..."), 5000);
-            setTimeout(() => escribir("RENDERIZANDO FILTROS CINEMATOGRÁFICOS..."), 20000);
-            setTimeout(() => escribir("SINCRO DE VOZ Y SUBS KARAOKE..."), 45000);
-
-            // Intentar cargar después de 2 minutos (para asegurar que GitHub termine)
-            setTimeout(() => intentarCargar(videoId), 120000);
         }
 
         function intentarCargar(id) {
-            // Añadimos un número aleatorio al final (?v=...) para romper la caché
             const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?v=${Math.random()}`;
             const v = document.getElementById('reproductor');
             document.getElementById('videoSource').src = url;
             v.load();
-            
             v.oncanplay = () => {
                 document.getElementById('resultado').classList.remove('hidden');
                 document.getElementById('status').classList.add('hidden');
                 document.getElementById('btn').disabled = false;
                 v.play();
             };
-
-            v.onerror = () => {
-                escribir("EL VÍDEO SE ESTÁ SUBIENDO... ESPERANDO 10s...");
-                setTimeout(() => intentarCargar(id), 10000);
-            };
-        }
-
-        function ver(id) {
-            intentarCargar(id);
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-
-        function actualizarUI() {
-            const l = document.getElementById('lista-historial');
-            l.innerHTML = historial.map(h => `
-                <button onclick="ver('${h.id}')" class="w-full text-left p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 text-xs font-bold hover:bg-zinc-800 transition-all">
-                    🎥 ${h.tema}
-                </button>
-            `).join('') || '<p class="text-zinc-600 text-center text-xs">No hay vídeos todavía.</p>';
+            v.onerror = () => setTimeout(() => intentarCargar(id), 10000);
         }
     </script>
 </body>
