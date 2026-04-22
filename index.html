@@ -3,88 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IA Video Debugger</title>
+    <title>Motor Fénix IA - Panel Seguro</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="max-w-md w-full bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
-        <h1 class="text-2xl font-bold text-center mb-6 text-orange-400">🕵️‍♂️ Modo Depuración</h1>
+    <div class="max-w-md w-full bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
+        <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">
+            🚀 Motor Fénix IA
+        </h1>
         
-        <input type="text" id="tema" placeholder="Tema del vídeo..." 
-               class="w-full p-3 rounded-lg bg-slate-900 border border-slate-600 mb-4 focus:ring-2 focus:ring-orange-500">
-        
-        <button onclick="generar()" id="btn" class="w-full bg-orange-600 p-3 rounded-lg font-bold hover:bg-orange-500 transition-all">
-            🚀 LANZAR MOTOR
-        </button>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Paso 1: Tu Llave (ghp_...)</label>
+                <input type="password" id="token" placeholder="Pega aquí tu token" 
+                       class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none text-sm">
+            </div>
 
-        <div id="status" class="mt-4 p-3 bg-slate-900 rounded-lg text-sm font-mono text-gray-400 hidden">
-            🛰️ Estado: <span id="msg">Esperando...</span>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Paso 2: ¿De qué hablamos hoy?</label>
+                <input type="text" id="tema" placeholder="Ej: Curiosidades del espacio" 
+                       class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-orange-500 outline-none">
+            </div>
+            
+            <button onclick="generar()" id="btn" class="w-full bg-gradient-to-r from-orange-500 to-yellow-600 p-4 rounded-xl font-bold text-lg hover:brightness-110 active:scale-95 transition-all shadow-lg">
+                🎬 GENERAR VÍDEO VIRAL
+            </button>
         </div>
 
-        <div id="resultado" class="hidden mt-6 space-y-4">
-            <div class="aspect-[9/16] w-full bg-black rounded-xl overflow-hidden border-2 border-slate-700 relative">
-                <video id="reproductor" controls class="w-full h-full" onerror="errorVideo()">
+        <div id="status" class="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 hidden">
+            <p class="text-sm font-mono text-orange-300 text-center" id="msg">Iniciando...</p>
+        </div>
+
+        <div id="resultado" class="hidden mt-8 space-y-4">
+            <div class="aspect-[9/16] w-full bg-black rounded-2xl overflow-hidden border-2 border-slate-700">
+                <video id="reproductor" controls class="w-full h-full">
                     <source id="videoSource" src="" type="video/mp4">
                 </video>
-                <div id="videoError" class="absolute inset-0 flex items-center justify-center bg-slate-900 hidden">
-                    <p class="text-red-500 text-center p-4 text-xs">❌ Error de carga.<br>El archivo aún no existe en GitHub o la ruta es incorrecta.</p>
-                </div>
             </div>
-            <p id="debugPath" class="text-[10px] text-gray-500 break-all text-center"></p>
         </div>
     </div>
 
     <script>
-        function errorVideo() {
-            document.getElementById('videoError').classList.remove('hidden');
-        }
-
         function generar() {
+            const token = document.getElementById('token').value;
             const tema = document.getElementById('tema').value;
             const btn = document.getElementById('btn');
-            const status = document.getElementById('status');
             const msg = document.getElementById('msg');
             
-            if(!tema) return alert("Escribe un tema");
+            if(!token || !tema) return alert("⚠️ Pon el token y el tema");
 
             btn.disabled = true;
-            status.classList.remove('hidden');
-            msg.innerText = "Enviando orden a GitHub...";
+            document.getElementById('status').classList.remove('hidden');
+            msg.innerText = "🛰️ Conectando con GitHub...";
 
-            // CAMBIA ESTO SI TU USUARIO NO ES Cristobal2929
             const user = "Cristobal2929";
             const repo = "video-iaaa";
             const urlVideo = `https://raw.githubusercontent.com/${user}/${repo}/main/static/video_final.mp4?v=${new Date().getTime()}`;
 
-            // Chivato de ruta
-            document.getElementById('debugPath').innerText = "Buscando en: " + urlVideo;
-
             fetch(`https://api.github.com/repos/${user}/${repo}/dispatches`, {
                 method: 'POST',
                 headers: { 
-                    'Authorization': `token ghp_PON_AQUI_TU_TOKEN_NUEVO`, 
+                    'Authorization': `token ${token}`, 
                     'Accept': 'application/vnd.github.v3+json' 
                 },
                 body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: tema } })
-            }).then(() => {
-                msg.innerText = "Motor encendido. Esperando 50 seg...";
-                let seg = 50;
-                const timer = setInterval(() => {
+            }).then(res => {
+                if(!res.ok) throw new Error("Token no válido o revocado por GitHub");
+                
+                let seg = 60;
+                const interval = setInterval(() => {
                     seg--;
-                    msg.innerText = `Procesando... ${seg}s`;
+                    msg.innerText = `⏳ Editando vídeo... ${seg}s`;
                     if(seg <= 0) {
-                        clearInterval(timer);
-                        msg.innerText = "¡Intentando cargar vídeo!";
+                        clearInterval(interval);
+                        msg.innerText = "✨ ¡LISTO!";
                         document.getElementById('videoSource').src = urlVideo;
                         document.getElementById('reproductor').load();
                         document.getElementById('resultado').classList.remove('hidden');
-                        document.getElementById('videoError').classList.add('hidden');
                         btn.disabled = false;
-                        btn.innerText = "🚀 REINTENTAR GENERAR";
                     }
                 }, 1000);
-            }).catch(e => {
-                msg.innerText = "❌ ERROR AL CONECTAR: " + e;
+            }).catch(err => {
+                alert("❌ ERROR: " + err.message + ". Seguramente GitHub anuló tu token por seguridad.");
                 btn.disabled = false;
             });
         }
