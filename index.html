@@ -3,23 +3,62 @@
 <head>
   <title>FENIX STUDIO</title>
 </head>
+
 <body>
 
-<h1>FENIX STUDIO AI VIDEO ENGINE</h1>
+<h1>FENIX STUDIO AI VIDEO ENGINE v2.0</h1>
 
-<video id="video" controls width="300"></video>
+<input id="idea" placeholder="Idea para el vídeo..." />
+<input id="licencia" placeholder="Introduce tu Licencia" />
 
-<br>
+<button onclick="generar()">GENERAR AHORA</button>
 
-<button onclick="loadVideo()">REPRODUCIR</button>
+<hr>
+
+<h3>☁️ Servidor de Archivos Real</h3>
+
+<video id="video" controls width="360"></video>
+
+<p id="status">Esperando vídeo...</p>
 
 <script>
-async function loadVideo() {
-  const res = await fetch("https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/public_url.txt");
+async function cargarVideo() {
+  const res = await fetch(
+    "https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/public_url.txt?cache=" + Date.now()
+  );
+
   const url = await res.text();
 
+  if (!url.includes("http")) {
+    document.getElementById("status").innerText = "Aún no hay vídeo";
+    return;
+  }
+
   document.getElementById("video").src = url.trim();
+  document.getElementById("status").innerText = "Vídeo cargado ✔";
 }
+
+async function generar() {
+  const tema = document.getElementById("idea").value;
+
+  await fetch("https://video-iaaa.vercel.app/api/generar", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      tema: tema,
+      codigo: "VIP-FENIX"
+    })
+  });
+
+  document.getElementById("status").innerText = "Generando vídeo...";
+
+  setTimeout(cargarVideo, 20000);
+}
+
+// auto load
+cargarVideo();
 </script>
 
 </body>
