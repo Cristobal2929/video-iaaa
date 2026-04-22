@@ -1,50 +1,65 @@
-import argparse, os, asyncio, google.generativeai as genai, yt_dlp, edge_tts
+import argparse, os, asyncio, google.generativeai as genai, edge_tts, requests
 
 async def fabricar_video(tema):
-    print(f"🎬 Iniciando motor para: {tema}")
+    print(f"🎨 INICIANDO CREADOR DE ARTE IA para: {tema}")
     os.makedirs("static", exist_ok=True)
     
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("❌ ERROR: No hay GEMINI_API_KEY")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        print("❌ ERROR: Falta GEMINI_API_KEY")
         return
 
-    # CAMBIO AQUÍ: Usamos un nombre de modelo más estándar
+    # --- 1. GUION Y PROMPT VISUAL CON GEMINI ---
     try:
-        genai.configure(api_key=api_key)
-        # Probamos con el nombre base que suele ser el más compatible
-        model = genai.GenerativeModel('gemini-1.5-flash') 
-        res = model.generate_content(f"Escribe un dato curioso, corto y viral sobre {tema}. Solo el texto, sin títulos.")
-        guion = res.text.strip()
-        print(f"📝 Guion: {guion[:30]}...")
+        genai.configure(api_key=gemini_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Le pedimos el dato y una descripción para la IA de imagen
+        prompt_ia = f"Dame un dato curioso corto sobre {tema}. Y luego, una frase en inglés que describa una imagen cinematográfica y épica sobre eso."
+        res = model.generate_content(prompt_ia)
+        texto_completo = res.text.strip().split('\n')
+        guion = texto_completo[0]
+        # Si Gemini nos da una descripción, la usamos; si no, inventamos una
+        prompt_imagen = texto_completo[-1] if len(texto_completo) > 1 else f"Cinematic epic photography of {tema}, 8k, highly detailed"
+        print(f"📝 Guion: {guion}")
     except Exception as e:
-        print(f"⚠️ Falló gemini-1.5-flash, intentando gemini-pro...")
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            res = model.generate_content(f"Dato curioso corto sobre {tema}")
-            guion = res.text.strip()
-        except Exception as e2:
-            print(f"❌ ERROR CRÍTICO Gemini: {e2}")
-            return
+        guion = f"Hablemos sobre {tema}. Es un tema increible."
+        prompt_imagen = f"Epic cinematic {tema}"
+        print(f"⚠️ Error Gemini: {e}")
 
-    # Voz
+    # --- 2. VOZ ---
     print("🔊 Generando voz...")
     await edge_tts.Communicate(guion, "es-ES-AlvaroNeural").save("static/voz.mp3")
 
-    # Fondo
-    print("📥 Descargando fondo...")
-    ydl_opts = {'format': 'mp4', 'default_search': 'ytsearch1:', 'outtmpl': 'bg.mp4', 'noplaylist': True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl: ydl.download(["minecraft parkour no copyright"])
+    # --- 3. GENERACIÓN DE ARTE IA (Pollinations) ---
+    print(f"🖼️ Creando Arte IA único para el fondo...")
+    # Limpiamos el prompt para la URL
+    prompt_url = prompt_imagen.replace(" ", "%20")
+    img_url = f"https://image.pollinations.ai/prompt/{prompt_url}?width=720&height=1280&model=flux&nologo=true"
+    
+    try:
+        img_data = requests.get(img_url).content
+        with open("static/fondo_ia.jpg", "wb") as f:
+            f.write(img_data)
+        print("✅ Imagen IA generada.")
+    except Exception as e:
+        print(f"❌ Falló la IA de imagen: {e}")
+        return
 
-    # Montaje
-    print("🎥 Montando video final...")
-    # Añadimos filtros para asegurar que el video sea vertical (9:16) y se vea bien en móvil
-    os.system('ffmpeg -y -i bg.mp4 -i static/voz.mp3 -vf "crop=ih*(9/16):ih,scale=1080:1920" -map 0:v -map 1:a -c:v libx264 -preset ultrafast -shortest static/video_final.mp4')
+    # --- 4. MONTAJE CINEMÁTICO (FFmpeg) ---
+    print("🎥 Animando imagen y montando video...")
+    # Aplicamos un efecto de "Zoom suave" (Ken Burns) a la imagen para que parezca video
+    ffmpeg_cmd = (
+        f'ffmpeg -y -loop 1 -i static/fondo_ia.jpg -i static/voz.mp3 '
+        f'-vf "zoompan=z=\'zoom+0.001\':x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2):d=300:s=720x1280" '
+        f'-c:v libx264 -preset ultrafast -tune stillimage -c:a copy -shortest static/video_final.mp4'
+    )
+    os.system(ffmpeg_cmd)
     
     if os.path.exists("static/video_final.mp4"):
-        print("✅ ¡VÍDEO TERMINADO CON ÉXITO!")
+        print("🚀 ¡OBRA DE ARTE TERMINADA!")
     else:
-        print("❌ ERROR: El archivo final no se creó.")
+        print("❌ Error en el montaje final.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
