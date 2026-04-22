@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col items-center p-6">
-    
     <div class="max-w-md w-full bg-zinc-900 p-10 rounded-[3rem] shadow-2xl border border-zinc-800 text-center mb-6">
         <h1 class="text-4xl font-black italic tracking-tighter mb-2">FENIX <span class="text-orange-500">STUDIO</span></h1>
         <p class="text-zinc-500 text-[10px] uppercase tracking-[0.3em] mb-10">AI Video Engine v2.0</p>
@@ -19,7 +18,6 @@
         
         <div id="status" class="mt-8 hidden">
             <p id="msg" class="text-xs text-orange-500 animate-pulse font-bold uppercase"></p>
-            <p id="debug" class="text-[9px] text-zinc-600 mt-2 font-mono"></p>
         </div>
         
         <div id="reproductor-box" class="mt-8 hidden animate-in zoom-in duration-700">
@@ -28,25 +26,60 @@
     </div>
 
     <div class="max-w-md w-full bg-zinc-900/50 p-6 rounded-[2rem] border border-zinc-800/50">
-        <h2 class="text-xs font-bold mb-4 text-zinc-500 uppercase tracking-widest text-center">🎬 Archivo de Proyectos</h2>
-        <div id="lista-historial" class="grid grid-cols-1 gap-2"></div>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">☁️ Archivo en la Nube</h2>
+            <button onclick="cargarHistorialNube()" class="text-[9px] bg-zinc-800 text-zinc-300 px-2 py-1 rounded hover:bg-zinc-700">↻ Refrescar</button>
+        </div>
+        <div id="lista-historial" class="grid grid-cols-1 gap-2">
+            <p class="text-zinc-700 text-center text-xs font-mono animate-pulse">Conectando con el servidor...</p>
+        </div>
     </div>
 
     <script>
-        // Cargar historial de la memoria del teléfono
-        let historial = JSON.parse(localStorage.getItem('fenix_pro_logs')) || [];
-        actualizarUI();
+        // Nada más entrar en la web, busca los vídeos reales en GitHub
+        window.onload = cargarHistorialNube;
+
+        function cargarHistorialNube() {
+            const l = document.getElementById('lista-historial');
+            l.innerHTML = '<p class="text-zinc-700 text-center text-xs font-mono animate-pulse">Buscando vídeos...</p>';
+            
+            fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/contents/static')
+            .then(res => res.json())
+            .then(data => {
+                if(!Array.isArray(data)) throw new Error("No array");
+                
+                // Filtramos solo los archivos de vídeo (.mp4)
+                const videos = data.filter(file => file.name.endsWith('.mp4'));
+                
+                if(videos.length === 0) {
+                    l.innerHTML = '<p class="text-zinc-700 text-center text-xs font-mono">No hay proyectos previos.</p>';
+                    return;
+                }
+
+                // Creamos los botones con los vídeos encontrados en la nube
+                l.innerHTML = videos.reverse().map(v => `
+                    <button onclick="verVideoDirecto('${v.download_url}')" class="w-full text-left p-4 bg-black rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-orange-500 hover:text-white transition-all shadow-md flex justify-between items-center">
+                        <span class="truncate w-3/4">🎥 ${v.name}</span>
+                        <span class="text-[10px] text-zinc-600 font-mono py-1 px-2 bg-zinc-900 rounded-md">VER</span>
+                    </button>
+                `).join('');
+            })
+            .catch(err => {
+                l.innerHTML = '<p class="text-red-900 text-center text-xs font-mono">Error al cargar la nube.</p>';
+            });
+        }
 
         function enviarOrden() {
             const tema = document.getElementById('tema').value;
-            const codigo = document.getElementById('codigo').value;
+            const codigoRaw = document.getElementById('codigo').value;
+            const codigo = codigoRaw.trim().toUpperCase(); 
             const id = "vid_" + Date.now();
             
             if(!tema || !codigo) return alert("Completa todos los campos");
             
             document.getElementById('status').classList.remove('hidden');
             document.getElementById('reproductor-box').classList.add('hidden');
-            document.getElementById('msg').innerText = "Conectando con el servidor...";
+            document.getElementById('msg').innerText = "VÍDEO EN PROCESO... ESPERA 3 MINUTOS.";
             
             fetch('/api/generar', {
                 method: 'POST',
@@ -54,22 +87,11 @@
                 body: JSON.stringify({ tema, id, codigo })
             })
             .then(async res => {
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error || "Error desconocido");
-                
-                document.getElementById('msg').innerText = "VÍDEO EN PROCESO... ESPERA 3 MINUTOS.";
-                
-                // Guardar en el historial instantáneamente
-                historial.unshift({ id: id, tema: tema });
-                localStorage.setItem('fenix_pro_logs', JSON.stringify(historial));
-                actualizarUI();
-
-                // Empezar a buscar el vídeo
+                if(!res.ok) throw new Error();
                 cargarVideo(id);
             })
-            .catch(err => {
-                document.getElementById('msg').innerText = "FALLO EN EL MOTOR";
-                document.getElementById('debug').innerText = err.message;
+            .catch(() => {
+                document.getElementById('msg').innerText = "FALLO EN LA LICENCIA";
             });
         }
 
@@ -81,32 +103,23 @@
             p.oncanplay = () => {
                 document.getElementById('reproductor-box').classList.remove('hidden');
                 document.getElementById('status').classList.add('hidden');
+                cargarHistorialNube(); // Refresca la lista de abajo automáticamente
                 p.play();
             };
             p.onerror = () => {
-                // Solo reintentar si el estado de carga está visible
                 if(!document.getElementById('status').classList.contains('hidden')) {
                      setTimeout(() => cargarVideo(id), 10000);
                 }
             };
         }
 
-        function verVideo(id) {
-            document.getElementById('status').classList.remove('hidden');
-            document.getElementById('msg').innerText = "Cargando archivo desde la nube...";
-            document.getElementById('reproductor-box').classList.add('hidden');
+        function verVideoDirecto(url) {
+            const p = document.getElementById('player');
+            document.getElementById('status').classList.add('hidden');
+            document.getElementById('reproductor-box').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
-            cargarVideo(id);
-        }
-
-        function actualizarUI() {
-            const l = document.getElementById('lista-historial');
-            l.innerHTML = historial.map(h => `
-                <button onclick="verVideo('${h.id}')" class="w-full text-left p-4 bg-black rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-orange-500 hover:text-white transition-all shadow-md flex justify-between items-center">
-                    <span>🎥 ${h.tema}</span>
-                    <span class="text-[10px] text-zinc-600 font-mono py-1 px-2 bg-zinc-900 rounded-md">VER</span>
-                </button>
-            `).join('') || '<p class="text-zinc-700 text-center text-xs font-mono">No hay proyectos previos.</p>';
+            p.src = url;
+            p.play();
         }
     </script>
 </body>
