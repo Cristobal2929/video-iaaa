@@ -3,49 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fénix IA - Reparado</title>
+    <title>Fénix IA - Turbo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 text-center">
-        <h1 class="text-2xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">🎬 Fénix IA PRO</h1>
-        <input type="text" id="tema" placeholder="Tema del vídeo..." class="w-full p-4 rounded-xl bg-slate-900 border border-slate-600 mb-4 outline-none focus:ring-2 focus:ring-orange-500">
-        <button onclick="generar()" id="btn" class="w-full bg-orange-600 p-4 rounded-xl font-bold hover:bg-orange-500 active:scale-95 transition-all">GENERAR VÍDEO</button>
-        <div id="status" class="mt-4 text-orange-300 font-mono text-xs hidden">
-            <span id="msg">Enviando orden...</span>
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center">
+        <h1 class="text-2xl font-black mb-6 tracking-tighter text-orange-500 italic">FENIX IA PRO</h1>
+        
+        <input type="text" id="tema" placeholder="Escribe un tema..." class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500">
+        
+        <button onclick="generar()" id="btn" class="w-full bg-white text-black p-4 rounded-2xl font-black active:scale-95 transition-all">CREAR VÍDEO VIRAL</button>
+
+        <div id="status" class="mt-6 hidden">
+            <p id="msg" class="text-orange-400 font-mono text-xs animate-pulse"></p>
         </div>
+
         <div id="resultado" class="hidden mt-6">
-            <video id="reproductor" controls playsinline class="w-full rounded-2xl border-2 border-slate-600">
-                <source id="videoSource" src="" type="video/mp4">
-            </video>
-            <p class="text-[10px] text-gray-400 mt-2">¿No carga? Espera 5 segundos y dale de nuevo.</p>
+            <div class="aspect-[9/16] bg-zinc-800 rounded-3xl overflow-hidden shadow-2xl border border-zinc-700">
+                <video id="reproductor" controls playsinline class="w-full h-full object-cover">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+            </div>
+            <p class="text-[10px] text-zinc-500 mt-4 uppercase tracking-widest">Sincronizando con satélite...</p>
         </div>
     </div>
+
     <script>
         function generar() {
             const t = document.getElementById('tema').value;
-            if(!t) return alert("Escribe un tema");
-            document.getElementById('btn').disabled = true;
+            if(!t) return;
+            const btn = document.getElementById('btn');
+            btn.disabled = true;
             document.getElementById('status').classList.remove('hidden');
+            
             const tk = "ghp_Uqdjx" + "UJQOgLrqmK" + "xjnj6AK4OE" + "TDnQ34C1Cnb";
+            
             fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
                 method: 'POST', headers: { 'Authorization': `token ${tk}` },
                 body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t } })
-            }).then(() => {
-                let s = 65;
-                const i = setInterval(() => {
-                    s--; document.getElementById('msg').innerText = `⏳ Procesando... ${s}s`;
-                    if(s <= 0) {
-                        clearInterval(i);
-                        document.getElementById('msg').innerText = "✨ ¡LISTO!";
-                        const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?v=${new Date().getTime()}`;
-                        document.getElementById('videoSource').src = url;
-                        document.getElementById('reproductor').load();
-                        document.getElementById('resultado').classList.remove('hidden');
-                        document.getElementById('btn').disabled = false;
-                    }
-                }, 1000);
             });
+
+            let s = 60;
+            const timer = setInterval(() => {
+                s--;
+                document.getElementById('msg').innerText = `CONSTRUYENDO EN LA NUBE... ${s}s`;
+                if(s <= 0) {
+                    clearInterval(timer);
+                    intentarCargar();
+                }
+            }, 1000);
+        }
+
+        function intentarCargar() {
+            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?v=${new Date().getTime()}`;
+            const video = document.getElementById('reproductor');
+            const source = document.getElementById('videoSource');
+            
+            source.src = url;
+            video.load();
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('msg').innerText = "CONECTANDO...";
+
+            // Si el video falla al cargar (porque GitHub es lento), reintenta cada 5 segundos
+            video.onerror = () => {
+                console.log("Reintentando carga...");
+                setTimeout(intentarCargar, 5000);
+            };
+
+            video.oncanplay = () => {
+                document.getElementById('msg').innerText = "¡VIDEO LISTO!";
+                document.getElementById('btn').disabled = false;
+                video.play();
+            };
         }
     </script>
 </body>
