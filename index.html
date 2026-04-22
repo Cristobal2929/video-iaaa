@@ -1,28 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>FENIX STUDIO</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>FENIX STUDIO AI VIDEO ENGINE V3</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <div class="container">
 
-  <h1>FENIX STUDIO AI VIDEO ENGINE</h1>
+  <h1>FENIX STUDIO</h1>
+  <h2>AI VIDEO ENGINE V3</h2>
 
-  <input id="idea" placeholder="Idea del vídeo..." />
-  <input id="licencia" placeholder="Licencia" />
+  <input id="tema" placeholder="Idea para el vídeo...">
+  <input id="licencia" placeholder="Introduce tu Licencia">
 
-  <button onclick="generar()">REPRODUCIR</button>
+  <button onclick="generarVideo()">🚀 GENERAR AHORA</button>
 
-  <p id="status">Esperando...</p>
+  <div class="panel">
+    <h3>☁️ Servidor de Archivos Real</h3>
+    <p id="status">Esperando generación...</p>
 
-  <video id="video" controls></video>
+    <video id="video" controls></video>
+
+    <p>🔗 URL del video:</p>
+    <a id="url" target="_blank"></a>
+  </div>
 
 </div>
 
 <script src="app.js"></script>
-
 </body>
 </html>
