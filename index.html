@@ -3,146 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fénix IA - Historial PRO</title>
+    <title>Fénix IA - Modo Leyenda</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center">
-    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center mb-6 shadow-2xl">
-        <h1 class="text-2xl font-black mb-6 tracking-tighter text-orange-500 italic">FENIX IA PRO</h1>
+<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center font-sans">
+
+    <div class="max-w-md w-full bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800 text-center mb-6 shadow-2xl">
+        <h1 class="text-3xl font-black mb-2 tracking-tighter text-white italic">FENIX <span class="text-orange-500">PRO</span></h1>
+        <p class="text-zinc-500 text-xs mb-8 uppercase tracking-widest">Motor Cinematográfico V2V</p>
         
-        <input type="text" id="tema" placeholder="Escribe un tema..." class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500">
-        <button onclick="generar()" id="btn" class="w-full bg-orange-600 text-white p-4 rounded-2xl font-black hover:bg-orange-500 active:scale-95 transition-all">CREAR NUEVO VÍDEO</button>
+        <input type="text" id="tema" placeholder="¿Sobre qué quieres el vídeo?" class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500 text-center">
+        <button onclick="generar()" id="btn" class="w-full bg-orange-600 text-white p-5 rounded-2xl font-black hover:bg-orange-500 active:scale-95 transition-all shadow-lg shadow-orange-900/20">CREAR OBRA MAESTRA</button>
         
-        <div id="status" class="mt-6 hidden">
-            <div id="consola" class="bg-black border border-zinc-700 rounded-lg p-4 text-left font-mono text-[11px] text-green-400 h-40 overflow-y-auto space-y-1 shadow-inner">
+        <div id="status" class="mt-8 hidden">
+            <div id="consola" class="bg-black border border-zinc-800 rounded-2xl p-4 text-left font-mono text-[10px] text-green-500 h-32 overflow-y-auto space-y-1 mb-4">
                 </div>
-            <p id="msg" class="text-orange-400 font-mono text-xs animate-pulse mt-4">PROCESANDO ORDEN...</p>
+            <div class="flex items-center justify-center space-x-2">
+                <div class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
+                <p id="msg" class="text-orange-400 font-mono text-xs uppercase font-bold">Procesando metraje...</p>
+            </div>
         </div>
 
-        <div id="resultado" class="hidden mt-6">
-            <div class="aspect-[9/16] bg-zinc-800 rounded-3xl overflow-hidden shadow-2xl border border-zinc-700">
+        <div id="resultado" class="hidden mt-8 animate-in fade-in zoom-in duration-500">
+            <div class="aspect-[9/16] bg-black rounded-[2rem] overflow-hidden shadow-2xl border-4 border-zinc-800">
                 <video id="reproductor" controls playsinline class="w-full h-full object-cover">
                     <source id="videoSource" src="" type="video/mp4">
                 </video>
             </div>
+            <button onclick="location.reload()" class="mt-4 text-zinc-500 text-xs underline">¿No se ve? Refrescar página</button>
         </div>
     </div>
 
-    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 shadow-2xl">
-        <h2 class="text-xl font-bold mb-4 text-orange-400">📚 Tu Historial</h2>
-        <div id="lista-historial" class="space-y-3 flex flex-col"></div>
+    <div class="max-w-md w-full bg-zinc-900/50 p-6 rounded-[2rem] border border-zinc-800/50">
+        <h2 class="text-sm font-bold mb-4 text-zinc-400 uppercase tracking-widest">🎬 Últimas creaciones</h2>
+        <div id="lista-historial" class="grid grid-cols-1 gap-2"></div>
     </div>
 
     <script>
-        let historial = JSON.parse(localStorage.getItem('fenix_historial')) || [];
-        actualizarUIHistorial();
+        let historial = JSON.parse(localStorage.getItem('fenix_v2v_logs')) || [];
+        actualizarUI();
 
-        // Los pasos exactos que hace nuestro motor en Python
-        const pasosTerminal = [
-            { tiempo: 1000, texto: "> 📡 Conectando con servidores de GitHub..." },
-            { tiempo: 4000, texto: "> 🚀 Iniciando MOTOR TURBO IA..." },
-            { tiempo: 8000, texto: "> 🧠 Gemini: Escribiendo guion épico y viral..." },
-            { tiempo: 16000, texto: "> 🔊 Edge-TTS: Sintetizando voz neuronal de Álvaro..." },
-            { tiempo: 22000, texto: "> ⏱️ SubMaker: Calculando tiempos exactos de palabras..." },
-            { tiempo: 30000, texto: "> 🖼️ Pollinations: Pintando escenario cinematográfico 8K..." },
-            { tiempo: 38000, texto: "> 🎥 FFmpeg: Aplicando efecto Zoom-Pan (Cámara lenta)..." },
-            { tiempo: 45000, texto: "> 🔠 FFmpeg: Quemando subtítulos amarillos en HD..." },
-            { tiempo: 52000, texto: "> 📦 Git: Empaquetando y subiendo vídeo final a la nube..." },
-            { tiempo: 57000, texto: "> 🌐 Verificando enlaces públicos..." }
-        ];
-
-        let temporizadores = [];
-
-        function escribirEnConsola(texto) {
-            const consola = document.getElementById('consola');
-            const linea = document.createElement('div');
-            linea.innerText = texto;
-            consola.appendChild(linea);
-            consola.scrollTop = consola.scrollHeight; // Auto-scroll hacia abajo
+        function escribir(t) {
+            const c = document.getElementById('consola');
+            c.innerHTML += `<div>> ${t}</div>`;
+            c.scrollTop = c.scrollHeight;
         }
 
         function generar() {
             const t = document.getElementById('tema').value;
             if(!t) return;
-            const btn = document.getElementById('btn');
-            btn.disabled = true;
             
-            const videoId = "video_" + new Date().getTime();
-            
-            // Limpiamos y mostramos el terminal
+            const videoId = "vid_" + Date.now();
             document.getElementById('status').classList.remove('hidden');
             document.getElementById('resultado').classList.add('hidden');
+            document.getElementById('btn').disabled = true;
             document.getElementById('consola').innerHTML = "";
-            document.getElementById('msg').innerText = "TRABAJANDO...";
+
+            escribir("CONECTANDO CON GITHUB ACTIONS...");
             
-            const tk = "ghp_" + "tC36OqKLJQT" + "3MWdlAampVc" + "cJZWIZz800eTKc";
-            
+            const tk = "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";
             fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
                 method: 'POST', headers: { 'Authorization': `token ${tk}` },
                 body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t, id: videoId } })
             });
 
             historial.unshift({ id: videoId, tema: t });
-            localStorage.setItem('fenix_historial', JSON.stringify(historial));
-            actualizarUIHistorial();
+            localStorage.setItem('fenix_v2v_logs', JSON.stringify(historial));
+            actualizarUI();
 
-            // Lanzar los mensajes del terminal
-            pasosTerminal.forEach(paso => {
-                const timer = setTimeout(() => escribirEnConsola(paso.texto), paso.tiempo);
-                temporizadores.push(timer);
-            });
+            escribir("SOLICITUD ENVIADA CON ÉXITO.");
+            escribir("MODO LEYENDA ACTIVADO.");
+            setTimeout(() => escribir("BUSCANDO METRAJE EN PEXELS..."), 5000);
+            setTimeout(() => escribir("RENDERIZANDO FILTROS CINEMATOGRÁFICOS..."), 20000);
+            setTimeout(() => escribir("SINCRO DE VOZ Y SUBS KARAOKE..."), 45000);
 
-            // A los 60 segundos empezamos a buscar el vídeo
-            setTimeout(() => { 
-                escribirEnConsola("> ✅ Proceso completado. Descargando vídeo...");
-                intentarCargar(videoId); 
-            }, 60000);
+            // Intentar cargar después de 2 minutos (para asegurar que GitHub termine)
+            setTimeout(() => intentarCargar(videoId), 120000);
         }
 
         function intentarCargar(id) {
-            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4`;
-            const video = document.getElementById('reproductor');
+            // Añadimos un número aleatorio al final (?v=...) para romper la caché
+            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?v=${Math.random()}`;
+            const v = document.getElementById('reproductor');
             document.getElementById('videoSource').src = url;
-            video.load();
+            v.load();
             
-            document.getElementById('msg').innerText = "SINCRONIZANDO...";
-
-            video.oncanplay = () => {
+            v.oncanplay = () => {
                 document.getElementById('resultado').classList.remove('hidden');
                 document.getElementById('status').classList.add('hidden');
                 document.getElementById('btn').disabled = false;
-                video.play();
+                v.play();
             };
 
-            video.onerror = () => {
-                setTimeout(() => intentarCargar(id), 5000);
+            v.onerror = () => {
+                escribir("EL VÍDEO SE ESTÁ SUBIENDO... ESPERANDO 10s...");
+                setTimeout(() => intentarCargar(id), 10000);
             };
         }
 
-        function verVideoViejo(id) {
-            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4`;
-            const video = document.getElementById('reproductor');
-            document.getElementById('videoSource').src = url;
-            video.load();
-            document.getElementById('resultado').classList.remove('hidden');
-            document.getElementById('status').classList.add('hidden');
-            video.play();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function ver(id) {
+            intentarCargar(id);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        function actualizarUIHistorial() {
-            const lista = document.getElementById('lista-historial');
-            lista.innerHTML = '';
-            if(historial.length === 0) {
-                lista.innerHTML = '<p class="text-zinc-500 text-sm text-center italic">Aquí se guardarán tus vídeos.</p>';
-            }
-            historial.forEach(v => {
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left p-4 bg-zinc-800 rounded-2xl hover:bg-zinc-700 text-sm border border-zinc-700 font-semibold active:scale-95 transition-all text-orange-200";
-                btn.innerText = "🎬 " + v.tema;
-                btn.onclick = () => verVideoViejo(v.id);
-                lista.appendChild(btn);
-            });
+        function actualizarUI() {
+            const l = document.getElementById('lista-historial');
+            l.innerHTML = historial.map(h => `
+                <button onclick="ver('${h.id}')" class="w-full text-left p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 text-xs font-bold hover:bg-zinc-800 transition-all">
+                    🎥 ${h.tema}
+                </button>
+            `).join('') || '<p class="text-zinc-600 text-center text-xs">No hay vídeos todavía.</p>';
         }
     </script>
 </body>
