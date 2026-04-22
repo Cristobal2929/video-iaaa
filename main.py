@@ -1,13 +1,18 @@
 import os
 import asyncio
-import argparse
 import requests
 import edge_tts
 
-from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
+from moviepy.editor import (
+    VideoFileClip,
+    AudioFileClip,
+    TextClip,
+    CompositeVideoClip,
+    concatenate_videoclips
+)
 
 # =========================
-# CONFIGURACIÓN GROQ
+# CONFIG
 # =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 PEXELS_API = os.getenv("PEXELS_API_KEY")
@@ -15,8 +20,11 @@ PEXELS_API = os.getenv("PEXELS_API_KEY")
 if not GROQ_API_KEY:
     raise Exception("❌ Falta GROQ_API_KEY")
 
+if not PEXELS_API:
+    raise Exception("❌ Falta PEXELS_API_KEY")
+
 # =========================
-# IA (GROQ)
+# IA GROQ (ROBUSTA)
 # =========================
 def generar_guion_y_keywords(tema):
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -41,13 +49,30 @@ def generar_guion_y_keywords(tema):
     }
 
     r = requests.post(url, headers=headers, json=data)
-    text = r.json()["choices"][0]["message"]["content"]
 
-    guion = text.split("GUION:")[1].split("KEYWORDS:")[0].strip()
-    keywords = text.split("KEYWORDS:")[1].strip().split(",")
+    # 🔥 DEBUG REAL
+    if r.status_code != 200:
+        raise Exception(f"❌ Error API Groq: {r.text}")
 
-    return guion, [k.strip() for k in keywords]
+    response_json = r.json()
 
+    if "choices" not in response_json:
+        raise Exception(f"❌ Respuesta inesperada Groq: {response_json}")
+
+    text = response_json["choices"][0]["message"]["content"]
+
+    try:
+        guion = text.split("GUION:")[1].split("KEYWORDS:")[0].strip()
+        keywords_raw = text.split("KEYWORDS:")[1].strip()
+        keywords = [k.strip() for k in keywords_raw.split(",")]
+
+        if len(keywords) < 4:
+            keywords = ["dark", "horror", "night", "fear"]
+
+        return guion, keywords
+
+    except Exception:
+        raise Exception(f"❌ Error parseando respuesta IA: {text}")
 
 # =========================
 # TTS
@@ -55,7 +80,6 @@ def generar_guion_y_keywords(tema):
 async def texto_a_voz(texto):
     communicate = edge_tts.Communicate(texto, "es-ES-AlvaroNeural")
     await communicate.save("voz.mp3")
-
 
 # =========================
 # PEXELS
@@ -82,10 +106,9 @@ def descargar_clips(keywords):
         clips.append(path)
 
     if not clips:
-        raise Exception("❌ No clips found")
+        raise Exception("❌ No se encontraron clips en Pexels")
 
     return clips
-
 
 # =========================
 # VIDEO
@@ -97,7 +120,12 @@ def montar_video(guion, clips_paths):
     clips_finales = []
 
     for p in clips_paths:
-        clip = VideoFileClip(p).resize(height=1920).set_duration(duracion).set_fps(30)
+        clip = (
+            VideoFileClip(p)
+            .resize(height=1920)
+            .set_duration(duracion)
+            .set_fps(30)
+        )
         clips_finales.append(clip)
 
     video = concatenate_videoclips(clips_finales, method="compose")
@@ -113,8 +141,12 @@ def montar_video(guion, clips_paths):
 
     final = CompositeVideoClip([video, subtitulos])
 
-    final.write_videofile("video_final.mp4", codec="libx264", audio_codec="aac", fps=30)
-
+    final.write_videofile(
+        "video_final.mp4",
+        codec="libx264",
+        audio_codec="aac",
+        fps=30
+    )
 
 # =========================
 # MAIN
@@ -134,7 +166,6 @@ async def ejecutar_todo(tema):
     montar_video(guion, clips)
 
     print("✅ VIDEO GENERADO")
-
 
 if __name__ == "__main__":
     import sys
