@@ -1,182 +1,78 @@
-import argparse, os, asyncio, edge_tts, requests, random, subprocess, re
+import argparse, os, asyncio, edge_tts, requests, random, subprocess
 import google.generativeai as genai
 
-def tiempo_a_ass(ms):
-s, ms = divmod(int(ms), 1000)
-m, s = divmod(s, 60)
-h, m = divmod(m, 60)
-return f"{h}:{m:02d}:{s:02d}.{int(ms/10):02d}"
-
-=========================
-
-DETECTAR FRASES
-
-=========================
-
-def dividir_frases(texto):
-frases = re.split(r'[.!?]+', texto)
-return [f.strip() for f in frases if len(f.strip()) > 10][:3]  # max 3 escenas
+def tiempo_a_ass(segundos):
+    m, s = divmod(segundos, 60)
+    h, m = divmod(m, 60)
+    return f"{int(h)}:{int(m):02d}:{s:05.2f}"
 
 async def fabricar_video(tema, video_id):
-print(f"🧠 MODO INTELIGENTE: {tema}")
-os.makedirs("static", exist_ok=True)
+    print(f"🔱 INICIANDO MODO LEYENDA: {tema}")
+    os.makedirs("static", exist_ok=True)
+    f_voz, f_subs, f_raw, f_music, f_final = "voz.mp3", "subs.ass", "raw.mp4", "music.mp3", f"static/{video_id}.mp4"
 
-f_voz = "voz.mp3"
-f_subs = "subs.ass"
-f_final = f"static/{video_id}.mp4"
-f_music = "music.mp3"
-
-# =========================
-# 1. GUION INTELIGENTE
-# =========================
-api_key = os.environ.get("GEMINI_API_KEY")
-try:
+    # 1. GUIONISTA DE ÉLITE
+    api_key = os.environ.get("GEMINI_API_KEY")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
+    prompt = f"Escribe un guion épico para un video de 60 segundos sobre {tema}. Estilo: Documental de suspenso. Frases de máximo 5 palabras. Sin asteriscos. Empieza con un gancho brutal."
+    try:
+        res = model.generate_content(prompt)
+        guion = res.text.strip().replace("*", "").replace('"', '')
+    except:
+        guion = f"Lo que vas a ver sobre {tema} no tiene explicación. Prepárate para entrar en lo desconocido."
 
-    prompt = f"""
-    Crea un guion viral sobre {tema}.
-    Usa frases cortas.
-    Mucho impacto emocional.
-    """
+    # 2. VOZ + SUBS KARAOKE PRO
+    communicate = edge_tts.Communicate(guion, "es-ES-AlvaroNeural")
+    subs_data = []
+    with open(f_voz, "wb") as f:
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio": f.write(chunk["data"])
+            elif chunk["type"] == "WordBoundary":
+                inicio = chunk["offset"]/10000000
+                duracion = chunk["duration"]/10000000
+                fin = inicio + duracion
+                palabra = chunk["text"].upper()
+                subs_data.append(f"Dialogue: 0,{tiempo_a_ass(inicio)},{tiempo_a_ass(fin)},Default,,0,0,0,,{{\\c&H00FFFFFF&\\bord5\\shad3\\b1}}{palabra}")
 
-    res = model.generate_content(prompt)
-    guion = res.text.strip().replace("*", "")
+    with open(f_subs, "w", encoding="utf-8") as f:
+        f.write("[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment\nStyle: Default,Arial,45,&H00FFFFFF,&H00000000,1,5,2,2\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
+        f.write("\n".join(subs_data))
 
-except:
-    guion = f"No deberías ignorar esto sobre {tema}..."
+    # 3. PEXELS API (Metraje 4K)
+    pex_key = os.environ.get("PEXELS_API_KEY")
+    headers = {"Authorization": pex_key}
+    print("🎥 Buscando metraje de alta gama...")
+    try:
+        r = requests.get(f"https://api.pexels.com/videos/search?query={tema}&per_page=1&orientation=portrait", headers=headers).json()
+        video_url = r['videos'][0]['video_files'][0]['link']
+    except:
+        video_url = "https://assets.mixkit.co/videos/preview/mixkit-stars-in-the-deep-space-34554-large.mp4"
 
-frases = dividir_frases(guion)
+    with open(f_raw, "wb") as f: f.write(requests.get(video_url).content)
 
-# =========================
-# 2. VOZ + SUBS DINÁMICOS
-# =========================
-communicate = edge_tts.Communicate(guion, "es-ES-AlvaroNeural")
+    # 4. MÚSICA DE SUSPENSE
+    music_url = "https://cdn.pixabay.com/download/audio/2022/10/19/audio_suspense.mp3"
+    with open(f_music, "wb") as f: f.write(requests.get(music_url).content)
 
-subs = []
-with open(f_voz, "wb") as f:
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            f.write(chunk["data"])
-        elif chunk["type"] == "WordBoundary":
-            inicio = tiempo_a_ass(chunk["offset"]/10000)
-            fin = tiempo_a_ass((chunk["offset"]+chunk["duration"])/10000)
-            palabra = chunk["text"]
-
-            # 🎯 palabras importantes
-            if len(palabra) > 6:
-                estilo = "{\\fs70\\c&H0000FF&\\bord4}"
-            else:
-                estilo = "{\\fs60\\c&H00FFFF&\\bord3}"
-
-            subs.append(
-                f"Dialogue: 0,{inicio},{fin},Default,,0,0,0,,{estilo}{palabra}"
-            )
-
-with open(f_subs, "w", encoding="utf-8") as f:
-    f.write("""[Script Info]
-
-ScriptType: v4.00+
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment
-Style: Default,Arial,60,&H00FFFF00,&H00000000,1,3,0,2
-
-[Events]
-Format: Layer, Start, End, Style, Text
-""")
-f.write("\n".join(subs))
-
-# =========================
-# 3. IMÁGENES POR ESCENA
-# =========================
-imgs = []
-for i, frase in enumerate(frases):
-    seed = random.randint(1,999999)
-    prompt_img = f"cinematic dramatic {frase} 8k vertical"
-    url = f"https://image.pollinations.ai/prompt/{prompt_img.replace(' ','%20')}?width=720&height=1280&seed={seed}"
-
-    nombre = f"img{i}.jpg"
-    with open(nombre,"wb") as f:
-        f.write(requests.get(url).content)
-
-    imgs.append(nombre)
-
-# =========================
-# 4. MÚSICA
-# =========================
-music_url = "https://cdn.pixabay.com/download/audio/2022/10/19/audio_suspense.mp3"
-with open(f_music,"wb") as f:
-    f.write(requests.get(music_url).content)
-
-# =========================
-# 5. EFECTOS INTELIGENTES
-# =========================
-fps = 30
-dur = float(os.popen(f"ffprobe -i {f_voz} -show_entries format=duration -v quiet -of csv=p=0").read())
-dur_img = dur / len(imgs)
-frames = int(dur_img * fps)
-
-filtros = []
-for i in range(len(imgs)):
-    # zoom dinámico aleatorio
-    zoom_type = random.choice([
-        "1.0+0.003*on",
-        "1.2-0.002*on",
-        "1.0+0.004*sin(on/10)"
-    ])
-
-    filtros.append(
-        f"[{i}:v]scale=1280:2275,"
-        f"zoompan=z='{zoom_type}':d={frames}:s=720x1280:fps={fps},"
-        f"eq=contrast=1.2:brightness=0.05,"
-        f"fade=t=in:st=0:d=0.5,fade=t=out:st={dur_img-0.5}:d=0.5[v{i}]"
+    # 5. RENDER CINEMATOGRÁFICO
+    print("🏗️ Renderizando obra maestra...")
+    cmd = (
+        f'ffmpeg -y -i {f_raw} -i {f_voz} -i {f_music} '
+        f'-filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,'
+        f'unsharp=5:5:1.0:5:5:0.0,curves=preset=darker,noise=alls=12:allf=t+u,vignette=PI/4,'
+        f'subtitles={f_subs}[v];[1:a]volume=1.5[a1];[2:a]volume=0.15[a2];[a1][a2]amix=inputs=2[a]" '
+        f'-map "[v]" -map "[a]" -c:v libx264 -pix_fmt yuv420p -b:v 5000k -shortest {f_final}'
     )
+    os.system(cmd)
+    
+    for f in [f_voz, f_subs, f_raw, f_music]:
+        if os.path.exists(f): os.remove(f)
+    print(f"🔱 VÍDEO COMPLETADO: {f_final}")
 
-concat = "".join([f"[v{i}]" for i in range(len(imgs))])
-
-filtro_final = (
-    "; ".join(filtros) +
-    f"; {concat}concat=n={len(imgs)}:v=1:a=0,"
-    f"subtitles={f_subs},fps=30[v]"
-)
-
-# =========================
-# 6. RENDER FINAL PRO
-# =========================
-inputs = " ".join([f"-loop 1 -t {dur_img} -i {img}" for img in imgs])
-
-cmd = f"""
-ffmpeg -y {inputs} -i {f_voz} -i {f_music} \
--filter_complex "{filtro_final}; \
-[{len(imgs)}:a]volume=1.2[a1]; \
-[{len(imgs)+1}:a]volume=0.25[a2]; \
-[a1][a2]amix=inputs=2:duration=shortest[a]" \
--map "[v]" -map "[a]" \
--c:v libx264 -pix_fmt yuv420p \
--shortest \
-{f_final}
-"""
-
-subprocess.run(cmd, shell=True)
-
-# =========================
-# CLEAN
-# =========================
-for img in imgs:
-    os.remove(img)
-
-os.remove(f_voz)
-os.remove(f_music)
-os.remove(f_subs)
-
-print(f"🎬 VIDEO INTELIGENTE: {f_final}")
-
-if name == "main":
-parser = argparse.ArgumentParser()
-parser.add_argument("--tema", type=str)
-parser.add_argument("--id", type=str, required=True)
-
-args = parser.parse_args()
-asyncio.run(fabricar_video(args.tema, args.id))
-
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tema", type=str)
+    parser.add_argument("--id", type=str, required=True)
+    args = parser.parse_args()
+    asyncio.run(fabricar_video(args.tema, args.id))
