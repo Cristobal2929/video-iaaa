@@ -4,6 +4,9 @@ import requests
 import edge_tts
 from moviepy.editor import *
 
+# =========================
+# API KEYS
+# =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 
@@ -14,7 +17,7 @@ if not PEXELS_API_KEY:
     raise Exception("❌ Falta PEXELS_API_KEY")
 
 # =========================
-# IA GROQ (MODELO POTENTE)
+# IA GROQ (ESTABLE)
 # =========================
 def generar_guion_y_keywords(tema):
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -25,22 +28,17 @@ def generar_guion_y_keywords(tema):
     }
 
     prompt = f"""
-Eres un creador experto de vídeos virales.
+Eres un creador de vídeos virales.
 
-Crea un guion de 15-20 segundos sobre: {tema}
-
-REGLAS:
-- Muy emocional y viral
-- Estilo TikTok / Shorts
-- Frases cortas
+Crea un guion corto (15-20 segundos) sobre: {tema}
 
 FORMATO EXACTO:
-GUION: ...
+GUION: texto emocional corto
 KEYWORDS: palabra1, palabra2, palabra3, palabra4
 """
 
     data = {
-        "model": "llama-3.1-70b-versatile",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {"role": "user", "content": prompt}
         ],
@@ -61,13 +59,12 @@ KEYWORDS: palabra1, palabra2, palabra3, palabra4
 
     try:
         guion = text.split("GUION:")[1].split("KEYWORDS:")[0].strip()
-        keywords_raw = text.split("KEYWORDS:")[1].strip()
+        keywords = text.split("KEYWORDS:")[1].strip().split(",")
 
-        keywords = [k.strip() for k in keywords_raw.split(",")]
+        keywords = [k.strip() for k in keywords]
 
-        # fallback por seguridad
         if len(keywords) < 4:
-            keywords = ["dark", "cinematic", "night", "fear"]
+            keywords = ["dark", "cinematic", "fear", "night"]
 
         return guion, keywords
 
@@ -75,14 +72,14 @@ KEYWORDS: palabra1, palabra2, palabra3, palabra4
         raise Exception(f"❌ Error parseando IA: {text}")
 
 # =========================
-# VOZ
+# VOZ IA
 # =========================
 async def texto_a_voz(texto):
     tts = edge_tts.Communicate(texto, "es-ES-AlvaroNeural")
     await tts.save("voz.mp3")
 
 # =========================
-# PEXELS
+# PEXELS VIDEO
 # =========================
 def descargar_clips(keywords):
     clips = []
@@ -105,12 +102,12 @@ def descargar_clips(keywords):
         clips.append(path)
 
     if not clips:
-        raise Exception("❌ No clips encontrados")
+        raise Exception("❌ No se encontraron clips")
 
     return clips
 
 # =========================
-# VIDEO
+# VIDEO EDITOR
 # =========================
 def montar_video(guion, clips):
     audio = AudioFileClip("voz.mp3")
