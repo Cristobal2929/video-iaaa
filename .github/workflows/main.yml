@@ -21,15 +21,19 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Ejecutar motor IA
+      - name: Generar video
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python main.py --tema "${{ github.event.client_payload.tema }}"
 
-      - name: Subir vídeo
-        uses: actions/upload-artifact@v4
+      # 🔥 SUBIDA A RELEASE (URL PÚBLICA)
+      - name: Crear Release con video
+        uses: softprops/action-gh-release@v2
         with:
-          name: video_final
-          path: video_final.mp4
+          tag_name: video-${{ github.run_id }}
+          name: Video ${{ github.run_id }}
+          files: video_final.mp4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
