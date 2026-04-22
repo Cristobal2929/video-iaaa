@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fénix IA - Turbo</title>
+    <title>Fénix IA - Historial PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center">
+<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center">
+    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 text-center mb-6 shadow-2xl">
         <h1 class="text-2xl font-black mb-6 tracking-tighter text-orange-500 italic">FENIX IA PRO</h1>
         <input type="text" id="tema" placeholder="Escribe un tema..." class="w-full p-4 rounded-2xl bg-black border border-zinc-700 mb-4 outline-none focus:border-orange-500">
-        <button onclick="generar()" id="btn" class="w-full bg-white text-black p-4 rounded-2xl font-black active:scale-95 transition-all">CREAR VÍDEO VIRAL</button>
+        <button onclick="generar()" id="btn" class="w-full bg-white text-black p-4 rounded-2xl font-black active:scale-95 transition-all">CREAR NUEVO VÍDEO</button>
         <div id="status" class="mt-6 hidden">
             <p id="msg" class="text-orange-400 font-mono text-xs animate-pulse">ESPERANDO AL ROBOT...</p>
         </div>
@@ -20,50 +20,94 @@
                     <source id="videoSource" src="" type="video/mp4">
                 </video>
             </div>
-            <p class="text-[10px] text-zinc-500 mt-4 uppercase tracking-widest">Sincronizando con la nube...</p>
         </div>
     </div>
+
+    <div class="max-w-md w-full bg-zinc-900 p-6 rounded-[2rem] border border-zinc-800 shadow-2xl">
+        <h2 class="text-xl font-bold mb-4 text-orange-400">📚 Tu Historial</h2>
+        <div id="lista-historial" class="space-y-3 flex flex-col">
+            </div>
+    </div>
+
     <script>
+        // Memoria de la web
+        let historial = JSON.parse(localStorage.getItem('fenix_historial')) || [];
+        actualizarUIHistorial();
+
         function generar() {
             const t = document.getElementById('tema').value;
             if(!t) return;
             const btn = document.getElementById('btn');
             btn.disabled = true;
-            document.getElementById('status').classList.remove('hidden');
-            document.getElementById('msg').innerText = "ORDEN ENVIADA...";
             
+            // Creamos la matrícula única del vídeo
+            const videoId = "video_" + new Date().getTime();
+            
+            document.getElementById('status').classList.remove('hidden');
+            document.getElementById('resultado').classList.add('hidden');
+            document.getElementById('msg').innerText = "CREANDO SUPER-PRODUCCIÓN...";
+            
+            // Tu llave secreta camuflada
             const tk = "ghp_" + "tC36OqKLJQT" + "3MWdlAampVc" + "cJZWIZz800eTKc";
             
             fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
                 method: 'POST', headers: { 'Authorization': `token ${tk}` },
-                body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t } })
+                body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: t, id: videoId } })
             });
 
-            setTimeout(() => {
-                intentarCargar();
-            }, 55000); // Esperamos 55 segundos antes de intentar cargar
+            // Guardamos el registro en tu móvil
+            historial.unshift({ id: videoId, tema: t });
+            localStorage.setItem('fenix_historial', JSON.stringify(historial));
+            actualizarUIHistorial();
+
+            // Esperamos 55 segundos a que se cocine
+            setTimeout(() => { intentarCargar(videoId); }, 55000);
         }
 
-        function intentarCargar() {
-            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?v=${new Date().getTime()}`;
+        function intentarCargar(id) {
+            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4`;
             const video = document.getElementById('reproductor');
-            const source = document.getElementById('videoSource');
-            
-            source.src = url;
+            document.getElementById('videoSource').src = url;
             video.load();
-            document.getElementById('resultado').classList.remove('hidden');
-            document.getElementById('msg').innerText = "BUSCANDO EL VÍDEO...";
+            
+            document.getElementById('msg').innerText = "BUSCANDO EN LA NUBE...";
 
             video.oncanplay = () => {
-                document.getElementById('msg').innerText = "¡VÍDEO ENCONTRADO!";
+                document.getElementById('resultado').classList.remove('hidden');
+                document.getElementById('status').classList.add('hidden');
                 document.getElementById('btn').disabled = false;
                 video.play();
             };
 
             video.onerror = () => {
-                console.log("Aún no está listo, reintentando...");
-                setTimeout(intentarCargar, 5000);
+                setTimeout(() => intentarCargar(id), 5000);
             };
+        }
+
+        function verVideoViejo(id) {
+            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4`;
+            const video = document.getElementById('reproductor');
+            document.getElementById('videoSource').src = url;
+            video.load();
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('status').classList.add('hidden');
+            video.play();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function actualizarUIHistorial() {
+            const lista = document.getElementById('lista-historial');
+            lista.innerHTML = '';
+            if(historial.length === 0) {
+                lista.innerHTML = '<p class="text-zinc-500 text-sm text-center italic">Aquí se guardarán tus vídeos.</p>';
+            }
+            historial.forEach(v => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 bg-zinc-800 rounded-2xl hover:bg-zinc-700 text-sm border border-zinc-700 font-semibold active:scale-95 transition-all";
+                btn.innerText = "🎬 " + v.tema;
+                btn.onclick = () => verVideoViejo(v.id);
+                lista.appendChild(btn);
+            });
         }
     </script>
 </body>

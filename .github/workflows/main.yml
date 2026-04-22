@@ -19,11 +19,11 @@ jobs:
       - name: 🚀 MOTOR TURBO IA
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python main.py --tema "${{ github.event.client_payload.tema }}"
-      - name: 📦 FORZAR SUBIDA DE VÍDEO
+        run: python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}"
+      - name: 📦 GUARDAR EN EL HISTORIAL
         run: |
           git config --global user.name "Motor Fenix"
           git config --global user.email "bot@fenix.com"
-          git add static/video_final.mp4 -f
-          git commit -m "Video Final" || echo "Sin cambios"
+          git add static/${{ github.event.client_payload.id }}.mp4 -f
+          git commit -m "Nuevo Video en Historial: ${{ github.event.client_payload.tema }}" || echo "Sin cambios"
           git push origin main --force
