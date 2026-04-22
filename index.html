@@ -22,104 +22,77 @@
         
         <div id="reproductor-box" class="mt-8 hidden animate-in zoom-in duration-700">
             <video id="player" controls playsinline class="w-full aspect-[9/16] rounded-3xl border-4 border-zinc-800 shadow-2xl bg-black object-cover"></video>
+            <p class="text-[10px] text-zinc-500 mt-4 uppercase tracking-widest">Vídeo generado con éxito</p>
         </div>
     </div>
 
     <div class="max-w-md w-full bg-zinc-900/50 p-6 rounded-[2rem] border border-zinc-800/50">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">☁️ Archivo en la Nube</h2>
-            <button onclick="cargarHistorialNube()" class="text-[9px] bg-zinc-800 text-zinc-300 px-2 py-1 rounded hover:bg-zinc-700">↻ Refrescar</button>
-        </div>
-        <div id="lista-historial" class="grid grid-cols-1 gap-2">
-            <p class="text-zinc-700 text-center text-xs font-mono animate-pulse">Conectando con el servidor...</p>
-        </div>
+        <h2 class="text-xs font-bold mb-4 text-zinc-500 uppercase tracking-widest text-center text-orange-500">☁️ Servidor de Archivos Real</h2>
+        <div id="lista-historial" class="grid grid-cols-1 gap-2 text-center text-zinc-600 text-[10px]">Cargando nube...</div>
     </div>
 
     <script>
-        // Nada más entrar en la web, busca los vídeos reales en GitHub
         window.onload = cargarHistorialNube;
 
         function cargarHistorialNube() {
-            const l = document.getElementById('lista-historial');
-            l.innerHTML = '<p class="text-zinc-700 text-center text-xs font-mono animate-pulse">Buscando vídeos...</p>';
-            
             fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/contents/static')
             .then(res => res.json())
             .then(data => {
-                if(!Array.isArray(data)) throw new Error("No array");
-                
-                // Filtramos solo los archivos de vídeo (.mp4)
                 const videos = data.filter(file => file.name.endsWith('.mp4'));
-                
+                const l = document.getElementById('lista-historial');
                 if(videos.length === 0) {
-                    l.innerHTML = '<p class="text-zinc-700 text-center text-xs font-mono">No hay proyectos previos.</p>';
+                    l.innerHTML = "No hay archivos en la nube.";
                     return;
                 }
-
-                // Creamos los botones con los vídeos encontrados en la nube
                 l.innerHTML = videos.reverse().map(v => `
-                    <button onclick="verVideoDirecto('${v.download_url}')" class="w-full text-left p-4 bg-black rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-orange-500 hover:text-white transition-all shadow-md flex justify-between items-center">
-                        <span class="truncate w-3/4">🎥 ${v.name}</span>
-                        <span class="text-[10px] text-zinc-600 font-mono py-1 px-2 bg-zinc-900 rounded-md">VER</span>
+                    <button onclick="verVideo('${v.name}')" class="w-full text-left p-4 bg-black rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-orange-500 transition-all flex justify-between items-center">
+                        <span>🎥 ${v.name}</span>
+                        <span class="text-orange-500 py-1 px-2 bg-zinc-900 rounded-md">REPRODUCIR</span>
                     </button>
                 `).join('');
             })
-            .catch(err => {
-                l.innerHTML = '<p class="text-red-900 text-center text-xs font-mono">Error al cargar la nube.</p>';
+            .catch(() => {
+                document.getElementById('lista-historial').innerHTML = "Repositorio Privado o Error de Conexión";
             });
         }
 
         function enviarOrden() {
             const tema = document.getElementById('tema').value;
-            const codigoRaw = document.getElementById('codigo').value;
-            const codigo = codigoRaw.trim().toUpperCase(); 
+            const codigo = document.getElementById('codigo').value.trim().toUpperCase();
             const id = "vid_" + Date.now();
-            
-            if(!tema || !codigo) return alert("Completa todos los campos");
+            if(!tema || !codigo) return alert("Faltan datos");
             
             document.getElementById('status').classList.remove('hidden');
-            document.getElementById('reproductor-box').classList.add('hidden');
-            document.getElementById('msg').innerText = "VÍDEO EN PROCESO... ESPERA 3 MINUTOS.";
+            document.getElementById('msg').innerText = "Motor en marcha... espera 2 minutos.";
             
             fetch('/api/generar', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ tema, id, codigo })
-            })
-            .then(async res => {
-                if(!res.ok) throw new Error();
-                cargarVideo(id);
-            })
-            .catch(() => {
-                document.getElementById('msg').innerText = "FALLO EN LA LICENCIA";
+            }).then(() => {
+                setTimeout(() => intentarCargar(id), 60000); // Espera 1 minuto antes de buscarlo
             });
         }
 
-        function cargarVideo(id) {
-            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?v=${Math.random()}`;
+        function intentarCargar(id) {
+            const url = `https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/${id}.mp4?t=${Date.now()}`;
             const p = document.getElementById('player');
             p.src = url;
             p.load();
             p.oncanplay = () => {
                 document.getElementById('reproductor-box').classList.remove('hidden');
                 document.getElementById('status').classList.add('hidden');
-                cargarHistorialNube(); // Refresca la lista de abajo automáticamente
                 p.play();
+                cargarHistorialNube();
             };
             p.onerror = () => {
-                if(!document.getElementById('status').classList.contains('hidden')) {
-                     setTimeout(() => cargarVideo(id), 10000);
-                }
+                document.getElementById('msg').innerText = "Sincronizando con la nube... (Paciencia)";
+                setTimeout(() => intentarCargar(id), 10000);
             };
         }
 
-        function verVideoDirecto(url) {
-            const p = document.getElementById('player');
-            document.getElementById('status').classList.add('hidden');
-            document.getElementById('reproductor-box').classList.remove('hidden');
-            window.scrollTo({top: 0, behavior: 'smooth'});
-            p.src = url;
-            p.play();
+        function verVideo(nombre) {
+            intentarCargar(nombre.replace('.mp4', ''));
         }
     </script>
 </body>
