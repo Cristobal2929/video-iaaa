@@ -15,14 +15,12 @@ jobs:
 
       - name: ⚡ Instalar Editor de Vídeo Rápido
         uses: FedericoCarboni/setup-ffmpeg@v3
-        # Esto descarga una versión portátil de FFmpeg al instante
 
       - name: 🧠 Configurar Python con MEMORIA
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip' 
-          # ¡Aquí está la magia! Guarda las librerías para no bajarlas más
 
       - name: Instalar Librerías (Desde la memoria)
         run: pip install -r requirements.txt || true
@@ -36,14 +34,24 @@ jobs:
       - name: 📦 GUARDAR EN EL HISTORIAL
         run: |
           mkdir -p static
+          
+          # Mover y renombrar
           if [ -f "video_final.mp4" ]; then
             mv video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
           elif [ -f "static/video_final.mp4" ]; then
             mv static/video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
           fi
+          
+          # Configurar identidad del robot
           git config --global user.name "Fenix Studio"
           git config --global user.email "bot@fenixstudio.com"
-          git pull origin main --rebase || true
-          git add static/*.mp4
+          
+          # 1. FORZAR (-f) a añadir el vídeo saltándose el .gitignore
+          git add -f static/*.mp4
+          
+          # 2. Empaquetar el vídeo (Hacer el commit) PRIMERO
           git commit -m "🎬 Vídeo listo: ${{ github.event.client_payload.id }}" || echo "No se encontró el vídeo"
+          
+          # 3. Sincronizar con la nube y subir
+          git pull origin main --rebase || true
           git push origin main
