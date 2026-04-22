@@ -1,1 +1,2 @@
+google-generativeai
 moviepy==1.0.3

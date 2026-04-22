@@ -11,28 +11,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: 'pip'
-
-      - name: Instalar FFmpeg al instante
+      - name: Instalar FFmpeg
         uses: FedericoCarboni/setup-ffmpeg@v2
-        with:
-          ffmpeg-version: release
-
-      - name: Instalar librerias Python
+      - name: Instalar librerias
         run: pip install -r requirements.txt || true
-
       - name: Ejecutar Motor
-        run: python3 main.py --tema "Video de prueba automatico" || echo "Fallo al ejecutar main.py"
-
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 main.py --tema "Video de prueba con Gemini" || echo "Error en Python"
       - name: Guardar Video
         run: |
           git config --global user.name "Motor Fenix"
           git config --global user.email "bot@ia.com"
           git add static/*.mp4 || true
-          git commit -m "Video generado" || true
+          git commit -m "Video con Guion de IA" || true
           git push || true
