@@ -1,6 +1,8 @@
 import os
 import sys
 import argparse
+import requests
+import random
 
 def main():
     parser = argparse.ArgumentParser()
@@ -8,32 +10,40 @@ def main():
     parser.add_argument('--id', type=str, required=True)
     args = parser.parse_args()
 
-    print(f"🎬 Arrancando motor para: {args.tema}")
-    
-    # REVISIÓN DE LLAVES
     api_key = os.getenv('PEXELS_API_KEY')
-    if not api_key:
-        print("❌ ERROR: No encuentro la PEXELS_API_KEY en los secretos de GitHub")
-        return
+    print(f"🎬 Buscando vídeos para: {args.tema}")
 
-    print("✅ Llave de Pexels detectada. Conectando...")
+    # Diccionario rápido de traducción para que Pexels siempre encuentre algo
+    # Si no está en la lista, usará el tema original
+    busqueda = args.tema
+    if "miedo" in args.tema.lower(): busqueda = "horror"
+    if "gato" in args.tema.lower(): busqueda = "cats"
+    if "coche" in args.tema.lower(): busqueda = "cars"
+    if "playa" in args.tema.lower(): busqueda = "beach"
 
-    # AQUÍ ES DONDE SUELE FALLAR
+    headers = {"Authorization": api_key}
+    url = f"https://api.pexels.com/videos/search?query={busqueda}&per_page=3&orientation=portrait"
+    
     try:
-        # Simulamos la creación para ver si el flujo de guardado funciona
-        # En tu código real, aquí es donde Pexels descarga.
-        # Vamos a forzar un error si el tema es "miedo" para ver qué pasa
-        if "miedo" in args.tema.lower():
-             print("⚠️ Pexels no devolvió resultados para este tema.")
+        response = requests.get(url, headers=headers)
+        data = response.json()
         
-        # CREAMOS UN ARCHIVO DE PRUEBA REAL (No vacío)
-        with open("video_final.mp4", "w") as f:
-            f.write("Este es un archivo de video simulado para probar el sistema de guardado.")
+        # Cogemos el primer vídeo que encontremos
+        video_url = data['videos'][0]['video_files'][0]['link']
+        print(f"✅ Vídeo encontrado: {video_url}")
         
-        print(f"✅ Archivo creado con éxito para el ID: {args.id}")
+        # Lo descargamos de verdad
+        v_data = requests.get(video_url).content
+        with open("video_final.mp4", "wb") as f:
+            f.write(v_data)
+        
+        print("🚀 Vídeo descargado y guardado correctamente.")
 
     except Exception as e:
-        print(f"❌ ERROR CRÍTICO: {str(e)}")
+        print(f"❌ Error: No se pudo obtener el vídeo. {str(e)}")
+        # Creamos un pequeño archivo de error para no dejarlo en 0 bytes
+        with open("video_final.mp4", "w") as f:
+            f.write("Error: Pexels no encontró resultados.")
 
 if __name__ == "__main__":
     main()
