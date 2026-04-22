@@ -1,30 +1,50 @@
 name: Generar Video Viral
+
 on:
   repository_dispatch:
     types: [generar_video_viral]
+
 jobs:
   construir:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Descargar código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Instalar Dependencias
         run: |
+          pip install -r requirements.txt || true
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install google-generativeai edge-tts requests
+
       - name: 🚀 EJECUTAR MOTOR LEYENDA
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}"
+        run: |
+          python main.py --tema "${{ github.event.client_payload.tema }}" --id "${{ github.event.client_payload.id }}" || echo "Fin del script"
+
       - name: 📦 GUARDAR EN EL HISTORIAL
         run: |
-          git config --global user.name "Motor Fenix"
-          git config --global user.email "bot@fenix.com"
-          git add static/*.mp4 -f
-          git commit -m "Video: ${{ github.event.client_payload.tema }}" || echo "Sin cambios"
-          git push origin main --force
+          # Aseguramos que la carpeta exista
+          mkdir -p static
+          
+          # Si el robot usó el nombre viejo, lo renombramos al ID del cliente
+          if [ -f "video_final.mp4" ]; then
+            mv video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
+          elif [ -f "static/video_final.mp4" ]; then
+            mv static/video_final.mp4 static/${{ github.event.client_payload.id }}.mp4
+          fi
+          
+          # Forzamos la subida a la nube
+          git config --global user.name "Fenix Studio"
+          git config --global user.email "bot@fenixstudio.com"
+          git pull origin main --rebase || true
+          git add static/*.mp4
+          git commit -m "🎬 Vídeo listo: ${{ github.event.client_payload.id }}" || echo "No se encontró el vídeo"
+          git push origin main
