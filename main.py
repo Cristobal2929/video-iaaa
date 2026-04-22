@@ -8,28 +8,32 @@ def tiempo_a_vtt(ms):
     return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
 
 async def fabricar_video(tema, video_id):
-    print(f"🎬 HISTORIA ÚNICA: {tema} [{video_id}]")
+    print(f"🎬 SUPER-PRODUCCIÓN CON EFECTOS: {tema}")
     os.makedirs("static", exist_ok=True)
     
-    # Nombres de archivo 100% únicos
     f_voz = f"static/voz_{video_id}.mp3"
     f_subs = f"static/subs_{video_id}.vtt"
     f_img = f"static/fondo_{video_id}.jpg"
     f_final = f"static/{video_id}.mp4"
 
+    # 1. GUION INQUEBRANTABLE (Largo siempre, pase lo que pase)
+    guion_reserva = f"¿Alguna vez te has preguntado sobre el oscuro misterio de {tema}? Durante décadas, expertos de todo el mundo han intentado descifrar la verdad oculta detrás de este fenómeno. Muchos creen que es solo una simple leyenda urbana, pero los descubrimientos recientes apuntan a algo mucho más grande, aterrador y fascinante. Los documentos secretos revelan que quienes se acercan demasiado a la verdad terminan enfrentándose a lo impensable. La humanidad siempre ha temido a lo desconocido, pero la curiosidad nos empuja inevitablemente a seguir buscando respuestas en las sombras. ¿Estamos realmente preparados para descubrir lo que se esconde detrás del telón? Comparte este video si crees que nos ocultan la verdad y síguenos para explorar más misterios sin resolver."
+    
     api_key = os.environ.get("GEMINI_API_KEY")
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"Escribe un guion épico sobre {tema} para un video de 1 minuto. Unas 110 palabras. Solo texto, sin asteriscos ni corchetes."
-        res = model.generate_content(prompt, safety_settings=[{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},{"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},{"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},{"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}])
+        res = model.generate_content(f"Escribe un guion épico y muy misterioso sobre {tema} para un video de TikTok. Mínimo 100 palabras. No uses corchetes, ni asteriscos.")
         guion = res.text.strip().replace('*', '').replace('"', '')
+        # Si Gemini nos da un guion muy corto por error, forzamos la historia larga
+        if len(guion.split()) < 30: 
+            guion = guion_reserva
     except:
-        guion = f"El misterio de {tema} es algo asombroso. Prepárate para descubrir la verdad oculta."
+        guion = guion_reserva
 
+    # 2. VOZ Y SUBTÍTULOS (Precisión milimétrica)
     communicate = edge_tts.Communicate(guion, "es-ES-AlvaroNeural")
     subs_vtt = ["WEBVTT\n\n"]
-    
     with open(f_voz, "wb") as file:
         async for chunk in communicate.stream():
             if chunk["type"] == "audio": file.write(chunk["data"])
@@ -40,22 +44,26 @@ async def fabricar_video(tema, video_id):
                 
     with open(f_subs, "w", encoding="utf-8") as f: f.writelines(subs_vtt)
 
-    img_url = f"https://image.pollinations.ai/prompt/cinematic%20epic%20{tema.replace(' ', '%20')}%208k%20vertical?width=480&height=854&nologo=true"
+    # 3. IMAGEN ALTA CALIDAD (HD 720x1280)
+    img_url = f"https://image.pollinations.ai/prompt/epic%20cinematic%20{tema.replace(' ', '%20')}%208k%20vertical?width=720&height=1280&nologo=true"
     with open(f_img, "wb") as f: f.write(requests.get(img_url).content)
 
-    estilo = "FontName=Arial,FontSize=26,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Alignment=2,MarginV=60"
+    # 4. EFECTOS ESPECIALES DE CÁMARA (ZoomPan) Y SUBTÍTULOS
+    print("🎥 Aplicando efecto de cámara lenta y quemando subtítulos...")
+    estilo = "FontName=Arial,FontSize=24,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Alignment=2,MarginV=80"
+    
+    # Hemos añadido un filtro "zoompan" que acerca la imagen lentamente al centro
     comando = (
         f'ffmpeg -y -loop 1 -i {f_img} -i {f_voz} '
-        f'-vf "scale=480:854,subtitles=\'{f_subs}\':force_style=\'{estilo}\'" '
+        f'-vf "scale=720:1280,zoompan=z=\'1.02+0.0002*in\':x=\'iw/2-(iw/zoom)/2\':y=\'ih/2-(ih/zoom)/2\':d=3000:s=720x1280,subtitles=\'{f_subs}\':force_style=\'{estilo}\'" '
         f'-c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 3.0 -movflags +faststart '
         f'-c:a aac -shortest {f_final}'
     )
     os.system(comando)
     
-    # Borramos los archivos intermedios para no colapsar la memoria, nos quedamos solo con el MP4
+    # Limpiamos basura
     for temp in [f_voz, f_subs, f_img]:
         if os.path.exists(temp): os.remove(temp)
-    print("✅ Guardado en el historial con éxito")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
