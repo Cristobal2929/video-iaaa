@@ -1,6 +1,6 @@
 name: Generar Video Viral
 on:
-  push: # <--- ¡EL TRUCO! Esto lo arrancará ahora mismo automáticamente
+  push:
   repository_dispatch:
     types: [generar_video_viral]
   workflow_dispatch:
@@ -11,20 +11,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Instalar dependencias
-        run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install -r requirements.txt || true
+          cache: 'pip' # <--- ¡EL NITRO! Esto guarda las librerías en caché
+
+      - name: Instalar FFmpeg rápido
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Instalar librerías Python
+        run: pip install -r requirements.txt || true
+
       - name: Ejecutar Motor
-        run: python3 main.py --tema "Video de prueba automatico" || echo "Falta el script, pero el motor va"
+        run: python3 main.py --tema "Video de prueba automatico" || echo "Fallo al ejecutar main.py"
+
       - name: Guardar Video
         run: |
           git config --global user.name "Motor Fenix"
           git config --global user.email "bot@ia.com"
           git add static/*.mp4 || true
-          git commit -m "Video de prueba generado" || true
+          git commit -m "Video generado" || true
           git push || true
