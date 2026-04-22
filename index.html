@@ -3,64 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Fénix - IA Videos</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #0d1117; color: #c9d1d9; margin-top: 50px; }
-        h1 { color: #58a6ff; }
-        input { padding: 15px; width: 80%; max-width: 400px; border-radius: 8px; border: 1px solid #30363d; background-color: #010409; color: white; margin-bottom: 20px; font-size: 16px; }
-        .btn-generar { background-color: #f39c12; color: white; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
-        .btn-descargar { background-color: #238636; color: white; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(35, 134, 54, 0.4); margin-top: 20px; }
-        #zona-resultado { display: none; margin-top: 40px; }
-        video { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 2px solid #30363d; }
-    </style>
+    <title>IA Video Debugger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-    <h1>🔥 Creador de Vídeos Virales 🔥</h1>
-    <p>Escribe tu tema y deja que la IA trabaje en la nube:</p>
-
-    <input type="text" id="tema" placeholder="Ej: La historia secreta de las pirámides...">
-    <br>
-    
-    <button class="btn-generar" onclick="simularGeneracion()">🎬 GENERAR VÍDEO VIRAL</button>
-
-    <p id="estado" style="color: #f39c12; display: none; margin-top: 20px;">⏳ Fabricando vídeo en el servidor... (Espera unos segundos)</p>
-
-    <div id="zona-resultado">
-        <h2 style="color: #3fb950;">✅ ¡Tu vídeo está listo!</h2>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+        <h1 class="text-2xl font-bold text-center mb-6 text-orange-400">🕵️‍♂️ Modo Depuración</h1>
         
-        <video width="320" height="568" controls id="reproductor">
-            <source src="" type="video/mp4" id="video-src">
-            Tu navegador no soporta vídeos.
-        </video>
-        <br>
-        <a href="" id="link-descarga" download="Video_Viral.mp4">
-            <button class="btn-descargar">⬇️ DESCARGAR VÍDEO</button>
-        </a>
+        <input type="text" id="tema" placeholder="Tema del vídeo..." 
+               class="w-full p-3 rounded-lg bg-slate-900 border border-slate-600 mb-4 focus:ring-2 focus:ring-orange-500">
+        
+        <button onclick="generar()" id="btn" class="w-full bg-orange-600 p-3 rounded-lg font-bold hover:bg-orange-500 transition-all">
+            🚀 LANZAR MOTOR
+        </button>
+
+        <div id="status" class="mt-4 p-3 bg-slate-900 rounded-lg text-sm font-mono text-gray-400 hidden">
+            🛰️ Estado: <span id="msg">Esperando...</span>
+        </div>
+
+        <div id="resultado" class="hidden mt-6 space-y-4">
+            <div class="aspect-[9/16] w-full bg-black rounded-xl overflow-hidden border-2 border-slate-700 relative">
+                <video id="reproductor" controls class="w-full h-full" onerror="errorVideo()">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+                <div id="videoError" class="absolute inset-0 flex items-center justify-center bg-slate-900 hidden">
+                    <p class="text-red-500 text-center p-4 text-xs">❌ Error de carga.<br>El archivo aún no existe en GitHub o la ruta es incorrecta.</p>
+                </div>
+            </div>
+            <p id="debugPath" class="text-[10px] text-gray-500 break-all text-center"></p>
+        </div>
     </div>
 
     <script>
-        function simularGeneracion() {
+        function errorVideo() {
+            document.getElementById('videoError').classList.remove('hidden');
+        }
+
+        function generar() {
             const tema = document.getElementById('tema').value;
-            if(!tema) { alert('Por favor, escribe un tema primero.'); return; }
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
+            const msg = document.getElementById('msg');
             
-            // Ocultar botón, mostrar mensaje de carga
-            document.querySelector('.btn-generar').style.display = 'none';
-            document.getElementById('estado').style.display = 'block';
-            
-            // Aquí en el futuro conectarás con Vercel/GitHub. Ahora simulamos la espera de la creación.
-            setTimeout(() => {
-                document.getElementById('estado').style.display = 'none';
-                document.getElementById('zona-resultado').style.display = 'block';
-                document.querySelector('.btn-generar').style.display = 'inline-block';
-                
-                // Truco para evitar la caché de GitHub: le ponemos un número aleatorio al final
-                const urlVideo = "https://raw.githubusercontent.com/Cristobal2929/video-iaaa/main/static/video_final.mp4?t=" + new Date().getTime();
-                
-                document.getElementById('reproductor').src = urlVideo;
-                document.getElementById('link-descarga').href = urlVideo;
-                
-            }, 3000); // Aparece a los 3 segundos para que veas el resultado
+            if(!tema) return alert("Escribe un tema");
+
+            btn.disabled = true;
+            status.classList.remove('hidden');
+            msg.innerText = "Enviando orden a GitHub...";
+
+            // CAMBIA ESTO SI TU USUARIO NO ES Cristobal2929
+            const user = "Cristobal2929";
+            const repo = "video-iaaa";
+            const urlVideo = `https://raw.githubusercontent.com/${user}/${repo}/main/static/video_final.mp4?v=${new Date().getTime()}`;
+
+            // Chivato de ruta
+            document.getElementById('debugPath').innerText = "Buscando en: " + urlVideo;
+
+            fetch(`https://api.github.com/repos/${user}/${repo}/dispatches`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `token ghp_PON_AQUI_TU_TOKEN_NUEVO`, 
+                    'Accept': 'application/vnd.github.v3+json' 
+                },
+                body: JSON.stringify({ event_type: 'generar_video_viral', client_payload: { tema: tema } })
+            }).then(() => {
+                msg.innerText = "Motor encendido. Esperando 50 seg...";
+                let seg = 50;
+                const timer = setInterval(() => {
+                    seg--;
+                    msg.innerText = `Procesando... ${seg}s`;
+                    if(seg <= 0) {
+                        clearInterval(timer);
+                        msg.innerText = "¡Intentando cargar vídeo!";
+                        document.getElementById('videoSource').src = urlVideo;
+                        document.getElementById('reproductor').load();
+                        document.getElementById('resultado').classList.remove('hidden');
+                        document.getElementById('videoError').classList.add('hidden');
+                        btn.disabled = false;
+                        btn.innerText = "🚀 REINTENTAR GENERAR";
+                    }
+                }, 1000);
+            }).catch(e => {
+                msg.innerText = "❌ ERROR AL CONECTAR: " + e;
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
