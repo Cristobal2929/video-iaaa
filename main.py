@@ -1,35 +1,30 @@
-import os, argparse, asyncio, google.generativeai as genai, yt_dlp, edge_tts
+import argparse, os, asyncio, google.generativeai as genai, yt_dlp, edge_tts
+from moviepy.editor import VideoFileClip, AudioFileClip
 
-async def generar_todo(tema):
-    print(f"--- INICIO DEPURACIÓN ---")
-    if not os.path.exists("static"): 
-        os.makedirs("static")
-        print("📁 Carpeta static creada.")
+async def generar_video(tema):
+    print(f"🚀 Fabricando: {tema}")
+    if not os.path.exists("static"): os.makedirs("static")
     
-    # Cerebro
+    # Cerebro (Guion)
     genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
     model = genai.GenerativeModel('gemini-1.5-flash')
-    res = model.generate_content(f"Dato corto sobre {tema}")
-    guion = res.text.strip()
-    print(f"📝 Guion listo: {guion[:20]}...")
-
-    # Voz
-    await edge_tts.Communicate(guion, "es-ES-AlvaroNeural").save("static/voz.mp3")
-    print("🔊 Audio guardado en static/voz.mp3")
-
-    # Fondo (Simulado rápido para asegurar que el archivo existe)
-    print("🎬 Creando archivo de video...")
-    comando_emergencia = 'ffmpeg -y -f lavfi -i color=c=black:s=1080x1920:d=5 -vf "drawtext=text=\'PROCESANDO...\':fontcolor=white:fontsize=50:x=(w-text_w)/2:y=(h-text_h)/2" -c:v libx264 static/video_final.mp4'
-    os.system(comando_emergencia)
+    guion = model.generate_content(f"Dato viral corto sobre {tema}. Solo texto.").text
     
-    if os.path.exists("static/video_final.mp4"):
-        size = os.path.getsize("static/video_final.mp4")
-        print(f"✅ VIDEO CREADO: static/video_final.mp4 ({size} bytes)")
-    else:
-        print("❌ ERROR: El video no se creó.")
+    # Boca (Audio)
+    await edge_tts.Communicate(guion, "es-ES-AlvaroNeural").save("static/voz.mp3")
+    
+    # Ojos (Video de fondo)
+    ydl_opts = {'format': 'best[ext=mp4]', 'default_search': 'ytsearch1:', 'outtmpl': 'background.mp4', 'noplaylist': True}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl: ydl.download(["minecraft parkour no copyright"])
+    
+    # Montaje
+    video = VideoFileClip("background.mp4").subclip(0, 15)
+    audio = AudioFileClip("static/voz.mp3")
+    video.set_audio(audio).write_videofile("static/video_final.mp4", codec="libx264")
+    print("✅ ¡VÍDEO GUARDADO EN STATIC!")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tema", type=str)
     args = parser.parse_args()
-    asyncio.run(generar_todo(args.tema))
+    asyncio.run(generar_video(args.tema))

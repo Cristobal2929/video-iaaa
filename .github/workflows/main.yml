@@ -1,0 +1,27 @@
+name: Generar Video Viral
+on:
+  repository_dispatch:
+    types: [generar_video_viral]
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Instalación
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install google-generativeai yt-dlp edge-tts moviepy
+      - name: Ejecución
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py --tema "${{ github.event.client_payload.tema }}"
+      - name: Subida Automática
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add static/video_final.mp4
+          git commit -m "Nuevo vídeo generado" || echo "No hay cambios"
+          git push
