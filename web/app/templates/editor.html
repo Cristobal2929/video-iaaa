@@ -1,40 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Editor Fenix</title>
-    <style>
-        body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        input { width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-        button { background: #00ca4e; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h2>🎬 Proyecto: {{ project.name }}</h2>
-    <div class="box">
-        <p>🪙 Créditos: {{ user.credits }}</p>
-        <input type="text" id="query" placeholder="Ej: Motivación y éxito" value="Video viral">
-        <button onclick="generate()">Generar Video (-1 crédito)</button>
-        <div id="status" style="margin-top:20px; color: #ffbd44;"></div>
-    </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESHUÁ - El Portal Divino</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,700&display=swap" rel="stylesheet">
+    
     <script>
-        async function generate() {
-            const q = document.getElementById('query').value;
-            const res = await fetch('/generate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query: q})
-            });
-            const data = await res.json();
-            if (data.job_id) {
-                document.getElementById('status').innerText = "En cola / Procesando...";
-                setInterval(async () => {
-                    const r = await fetch('/status/' + data.job_id);
-                    const s = await r.json();
-                    if(s.status === 'completed') location.href = '/dashboard';
-                }, 4000);
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        marfil: '#FDFCF0',
+                        oro: '#BF953F'
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        playfair: ['Playfair Display', 'serif'],
+                    }
+                }
             }
         }
+    </script>
+    <style>
+        body { 
+            background-color: #FDFCF0; 
+            color: #1a1a1a; 
+            font-family: 'Playfair Display', serif; 
+            /* Textura sutil estelar de fondo */
+            background-image: radial-gradient(rgba(191, 149, 63, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .glass-card {
+            background: rgba(253, 252, 240, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(191, 149, 63, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(191, 149, 63, 0.15);
+        }
+        
+        /* Spinner de carga místico */
+        .loader { 
+            border-top-color: #BF953F; 
+            -webkit-animation: spinner 1.5s linear infinite; 
+            animation: spinner 1.5s linear infinite; 
+        }
+        @keyframes spinner { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+
+    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full max-w-4xl h-96 bg-gradient-to-b from-[rgba(191,149,63,0.1)] to-transparent pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-16 max-w-4xl relative z-10">
+        
+        <header class="text-center mb-16">
+            <h1 class="font-cinzel text-5xl md:text-7xl text-oro font-bold mb-4 tracking-widest drop-shadow-sm">TESHUÁ</h1>
+            <p class="font-playfair text-xl md:text-2xl text-gray-700 italic">El Puzzle Espiritual Unificado</p>
+        </header>
+
+        <main>
+            <div class="glass-card rounded-2xl p-8 md:p-10 mb-12 transform transition-all duration-500 hover:shadow-2xl">
+                <form id="teshuaForm" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="relative group">
+                            <label class="block font-cinzel text-oro font-bold mb-2 uppercase tracking-wide text-sm">Nombre del Buscador</label>
+                            <input type="text" id="nombre" required 
+                                class="w-full bg-transparent border-b-2 border-[rgba(191,149,63,0.3)] focus:outline-none focus:border-oro text-xl py-2 transition-colors duration-300" 
+                                placeholder="Ej: Elías">
+                        </div>
+                        <div class="relative group">
+                            <label class="block font-cinzel text-oro font-bold mb-2 uppercase tracking-wide text-sm">Fecha de Nacimiento</label>
+                            <input type="date" id="fecha" required 
+                                class="w-full bg-transparent border-b-2 border-[rgba(191,149,63,0.3)] focus:outline-none focus:border-oro text-xl py-2 transition-colors duration-300 text-gray-700 cursor-pointer">
+                        </div>
+                    </div>
+                    <div class="text-center pt-6">
+                        <button type="submit" 
+                            class="bg-oro text-marfil font-cinzel font-bold text-lg py-4 px-10 rounded-full hover:bg-[#a68036] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                            Revelar mi Código 650
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="portalRevelacion" class="hidden opacity-0 transition-opacity duration-1000">
+                <div class="glass-card rounded-2xl p-8 md:p-14 min-h-[400px]">
+                    
+                    <div id="estadoCarga" class="hidden flex-col items-center justify-center py-16">
+                        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-20 w-20 mb-6"></div>
+                        <p class="font-cinzel text-oro text-xl animate-pulse tracking-wide">Consultando los Registros de Yesod...</p>
+                        <p class="font-playfair text-gray-500 italic mt-2 text-sm">Sincronizando frecuencias...</p>
+                    </div>
+
+                    <article id="reporteContenido" class="prose prose-lg md:prose-xl max-w-none text-gray-800 leading-relaxed font-playfair">
+                        </article>
+                    
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('teshuaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('nombre').value;
+            const fecha = document.getElementById('fecha').value;
+            
+            const portal = document.getElementById('portalRevelacion');
+            const estadoCarga = document.getElementById('estadoCarga');
+            const reporteContenido = document.getElementById('reporteContenido');
+
+            // Preparar el lienzo
+            portal.classList.remove('hidden');
+            setTimeout(() => portal.classList.remove('opacity-0'), 50); // Fade in suave del contenedor
+            
+            estadoCarga.classList.remove('hidden');
+            estadoCarga.classList.add('flex');
+            reporteContenido.innerHTML = '';
+            reporteContenido.style.opacity = '0';
+
+            try {
+                // Aquí se conectará con FastAPI (main.py)
+                // Se ajusta la URL a la ruta local o de producción
+                const response = await fetch(`http://127.0.0.0:8000/generar-portal?nombre=${encodeURIComponent(nombre)}&fecha=${encodeURIComponent(fecha)}`);
+                
+                if (!response.ok) throw new Error('Desconexión del portal');
+                
+                const data = await response.json();
+                
+                // Ocultar carga
+                estadoCarga.classList.add('hidden');
+                estadoCarga.classList.remove('flex');
+                
+                // Inyectar y mostrar el HTML purificado
+                if (data.html) {
+                    reporteContenido.innerHTML = data.html;
+                    
+                    // Efecto Fade-in para el texto
+                    let opacity = 0;
+                    const fadeIn = setInterval(() => {
+                        if (opacity >= 1) clearInterval(fadeIn);
+                        reporteContenido.style.opacity = opacity;
+                        opacity += 0.05;
+                    }, 40);
+                }
+            } catch (error) {
+                estadoCarga.classList.add('hidden');
+                estadoCarga.classList.remove('flex');
+                reporteContenido.style.opacity = '1';
+                reporteContenido.innerHTML = `
+                    <div class="text-center text-red-800 border border-red-300 p-6 rounded-lg bg-red-50">
+                        <h3 class="font-cinzel font-bold text-2xl mb-2">Interferencia Detectada</h3>
+                        <p class="font-playfair">La conexión con el núcleo de Fenix AI ha sido interrumpida. Asegúrate de que el servidor FastAPI esté en ejecución.</p>
+                    </div>`;
+                console.error('Error del servidor:', error);
+            }
+        });
     </script>
 </body>
 </html>
