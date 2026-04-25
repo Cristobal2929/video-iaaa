@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fenix AI Studio v3.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .tab-btn.active { background-color: #3b82f6; border-color: #60a5fa; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    </style>
+</head>
+<body class="p-3 md:p-6 font-sans">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+        🤖 Fenix AI Studio
+    </h1>
+    
+    <div class="flex flex-wrap justify-center gap-2 mb-6">
+        <button id="btn-web" class="tab-btn active px-5 py-2 rounded-lg bg-blue-600 transition font-semibold border border-gray-700" onclick="showTab('web')" id="btn-web" class="tab-btn active px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition font-semibold border border-gray-700">🌐 Web No-Code</button>
+        <button id="btn-video" class="tab-btn px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition font-semibold border border-gray-700" onclick="showTab('video')" id="btn-video" class="tab-btn px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition font-semibold border border-gray-700">🎬 Reels IA</button>
+        <button id="btn-history" class="tab-btn px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition font-semibold border border-gray-700" onclick="showTab('history')" id="btn-history" class="tab-btn px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition font-semibold border border-gray-700">📁 Galería</button>
+    </div>
+
+    <div id="tab-web" class="max-w-[1500px] mx-auto w-full">
+        <div class="bg-gray-800/60 p-5 rounded-2xl border border-gray-700 mb-6 max-w-2xl mx-auto backdrop-blur-sm shadow-xl">
+            <textarea id="web-prompt" class="w-full bg-gray-900 border border-gray-600 p-3 rounded-lg text-white mb-3 focus:ring-2 focus:ring-blue-500 text-sm" rows="2" placeholder="Ej: Landing page para una agencia de viajes de lujo..."></textarea>
+            
+            <div class="flex gap-2 mb-3">
+                <button onclick="generarWeb()" id="btn-gen-web" class="flex-grow bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-500 transition shadow-lg text-sm">✨ Crear desde Prompt</button>
+                <label class="bg-red-600 hover:bg-red-500 py-3 px-4 rounded-lg font-bold cursor-pointer transition shadow-lg text-sm flex items-center gap-2">
+                    <span>📄</span> PDF a Web
+                    <input type="file" id="pdf-file" accept=".pdf" class="hidden" onchange="generarDesdePDF(this)">
+                </label>
+            </div>
+
+            <p id="web-status" class="text-center mt-3 text-blue-300 font-medium hidden animate-pulse text-sm">👨‍💻 La IA está diseñando y buscando fotos en Pexels... ⏳</p>
+        </div>
+
+        <div id="web-workspace" class="grid grid-cols-1 xl:grid-cols-2 gap-5 hidden">
+            <div class="flex flex-col gap-4">
+                <div id="no-code-panel" class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                        <h3 class="text-lg font-bold text-blue-300 flex items-center gap-2"><span>🎨</span> Editor Visual Simple</h3>
+                        <button onclick="toggleEditor()" class="text-sm bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded shadow-lg flex items-center gap-2"><span>💻</span> Ver Código</button>
+                    </div>
+                    <div id="content-managers" class="space-y-6 max-h-[600px] overflow-y-auto pr-2"></div>
+                </div>
+
+                <div id="code-editor-panel" class="bg-gray-800 p-4 rounded-2xl border border-gray-700 shadow-xl hidden">
+                    <h3 class="text-sm font-mono text-green-400 mb-2">index.html</h3>
+                    <textarea id="web-editor" class="w-full h-72 bg-[#0d1117] text-green-400 p-3 font-mono text-xs rounded-lg border border-gray-700 resize-y outline-none" oninput="actualizarPreviewFromCode()"></textarea>
+                </div>
+                <button onclick="descargarWeb()" class="w-full bg-orange-600 py-3 rounded-xl font-bold hover:bg-orange-500 transition shadow-lg text-sm flex justify-center items-center gap-2"><span>📦</span> Descargar Carpeta (.ZIP)</button>
+            </div>
+            
+            <div class="bg-white rounded-2xl border-4 border-gray-700 shadow-2xl overflow-hidden min-h-[500px] xl:min-h-[700px] sticky top-4">
+                <iframe id="web-preview" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-video" class="max-w-xl mx-auto hidden"><div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg text-center"><h2 class="text-lg font-bold text-purple-300 mb-3">Generador Video Viral</h2><textarea id="video-prompt" class="w-full bg-gray-900 border border-gray-600 p-3 rounded-lg text-white mb-3 focus:ring-purple-500" rows="3"></textarea><button onclick="generarVideo()" id="btn-gen-video" class="w-full bg-purple-600 py-3 rounded-lg font-bold">🎬 Crear Reel</button><p id="video-status" class="text-center mt-3 text-purple-300 font-medium hidden animate-pulse text-sm">🎙️ Procesando vídeo... ⏳</p><div id="video-result" class="mt-4 hidden"></div></div></div>
+    <div id="tab-history" class="max-w-5xl mx-auto hidden"><div class="bg-gray-800 p-5 rounded-2xl border border-gray-700"><h2 class="text-lg font-bold text-gray-200 mb-4">Tu Galería</h2><div id="history-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div></div></div>
+
+    <script>
+        let currentHtml = "";
+
+        function showTab(t) { document.querySelectorAll('> div[id^="tab-"]').forEach(e=>e.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); if(t==='history') cargarHistorial(); }
+        function toggleEditor() { const panel = document.getElementById('code-editor-panel'); panel.classList.toggle('hidden'); if(!panel.classList.contains('hidden')) panel.scrollIntoView({behavior: "smooth"}); }
+
+        
+        async function generarDesdePDF(input) {
+            if(!input.files[0]) return;
+            const status = document.getElementById("web-status");
+            status.innerText = "📑 Leyendo PDF y transformando a Web... ⏳";
+            status.classList.remove("hidden");
+            
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+            
+            try {
+                const res = await fetch("/generate/web-from-pdf", { method: "POST", body: formData });
+                const data = await res.json();
+                if(data.status === "success") {
+                    currentHtml = data.html;
+                    document.getElementById("web-workspace").classList.remove("hidden");
+                    document.getElementById("web-editor").value = currentHtml;
+                    cargarGestorContenido();
+                    actualizarIframe();
+                } else { alert("Error: " + data.html); }
+            } catch(e) { alert("Error en la subida."); }
+            status.classList.add("hidden");
+            status.innerText = "👨‍💻 La IA está diseñando y buscando fotos en Pexels... ⏳";
+        }
+
+        async function generarWeb() {
+            const prompt = document.getElementById("web-prompt").value; if(!prompt) return;
+            document.getElementById("btn-gen-web").disabled = true; document.getElementById("web-status").classList.remove("hidden");
+            try {
+                const res = await fetch("/generate/web", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({prompt}) });
+                const data = await res.json();
+                if(data.status === "success") {
+                    currentHtml = data.html; 
+                    document.getElementById("web-workspace").classList.remove("hidden");
+                    document.getElementById("web-editor").value = currentHtml; 
+                    cargarGestorContenido(); 
+                    actualizarIframe();
+                } else alert("Error IA.");
+            } catch(e) { alert("Error."); }
+            document.getElementById("btn-gen-web").disabled = false; document.getElementById("web-status").classList.add("hidden");
+        }
+
+        function cargarGestorContenido() {
+            const container = document.getElementById("content-managers");
+            container.innerHTML = ""; 
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(currentHtml, "text/html");
+            
+            // BUSCADOR AVANZADO DE IMÁGENES (Lee <img> y CSS background)
+            let editableImages = [];
+            doc.querySelectorAll('*').forEach((el, index) => {
+                if(el.tagName === 'IMG' && el.src) {
+                    editableImages.push({ type: 'img', url: el.src, domIndex: index });
+                } else if(el.style && el.style.backgroundImage && el.style.backgroundImage !== '' && el.style.backgroundImage !== 'none') {
+                    let match = el.style.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+                    if(match && match[1]) {
+                        editableImages.push({ type: 'bg', url: match[1], domIndex: index });
+                    }
+                }
+            });
+
+            if(editableImages.length > 0) {
+                const imgBlock = document.createElement('div');
+                imgBlock.innerHTML = `<h4 class="font-semibold text-sm text-gray-400 mb-3 border-b border-gray-700 pb-1">📷 IMÁGENES Y FONDOS (Toca para cambiar)</h4>`;
+                const imgGrid = document.createElement('div');
+                imgGrid.className = "grid grid-cols-2 md:grid-cols-3 gap-3";
+                
+                editableImages.forEach((item, uiIndex) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "relative group bg-gray-900 p-1 rounded-lg border border-gray-700 overflow-hidden";
+                    itemDiv.innerHTML = `
+                        <img src="${item.url}" class="w-full h-24 object-cover rounded cursor-pointer group-hover:opacity-60 transition" id="manager-img-${uiIndex}">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                            <span class="text-xs bg-black/80 text-white px-2 py-1 rounded">Cambiar</span>
+                        </div>
+                        <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="subirImagen(this, ${uiIndex}, '${item.type}', ${item.domIndex})">
+                    `;
+                    imgGrid.appendChild(itemDiv);
+                });
+                imgBlock.appendChild(imgGrid);
+                container.appendChild(imgBlock);
+            }
+
+            // GESTOR DE TEXTOS
+            const textElements = doc.querySelectorAll('h1, h2, h3, p');
+            if(textElements.length > 0) {
+                const textBlock = document.createElement('div');
+                textBlock.className = "mt-6 space-y-3";
+                textBlock.innerHTML = `<h4 class="font-semibold text-sm text-gray-400 mb-1 border-b border-gray-700 pb-1">✍️ EDITOR DE TEXTOS</h4>`;
+                
+                let i = 0;
+                for(let el of textElements) {
+                    if(i >= 12) break;
+                    if(el.textContent.trim().length < 5) continue; 
+                    
+                    let currIndex = -1;
+                    const allEls = doc.querySelectorAll('*');
+                    for(let j=0; j<allEls.length; j++) { if(allEls[j] === el) { currIndex = j; break; } }
+
+                    const label = el.tagName;
+                    const input = el.textContent.trim().length > 60 ? document.createElement('textarea') : document.createElement('input'); 
+                    input.value = el.textContent.trim();
+                    input.className = "w-full bg-gray-900 border border-gray-700 p-2 rounded text-xs text-white focus:ring-1 focus:ring-blue-500 outline-none";
+                    if(input.tagName === 'TEXTAREA') input.rows = 2;
+                    
+                    input.oninput = (e) => actualizarTextoHtml(currIndex, e.target.value);
+                    
+                    const wrap = document.createElement('div');
+                    wrap.innerHTML = `<label class="text-xs text-gray-500 font-mono">[${label}]</label>`;
+                    wrap.appendChild(input);
+                    textBlock.appendChild(wrap);
+                    i++;
+                }
+                container.appendChild(textBlock);
+            }
+        }
+
+        async function subirImagen(input, uiIndex, type, domIndex) {
+            if(!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const imgEl = document.getElementById(`manager-img-${uiIndex}`);
+            imgEl.classList.add("animate-pulse", "opacity-50");
+
+            const formData = new FormData(); formData.append("file", file);
+            try {
+                const res = await fetch("/api/upload-image", { method: "POST", body: formData });
+                const data = await res.json();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(currentHtml, "text/html");
+                const targetEl = doc.querySelectorAll('*')[domIndex];
+                
+                if(type === 'img') {
+                    targetEl.src = data.url;
+                } else if(type === 'bg') {
+                    targetEl.style.backgroundImage = `url('${data.url}')`;
+                }
+                
+                currentHtml = doc.documentElement.outerHTML;
+                document.getElementById("web-editor").value = currentHtml;
+                imgEl.src = data.url; 
+                actualizarIframe(); 
+            } catch(e) { alert("Error al subir."); }
+            imgEl.classList.remove("animate-pulse", "opacity-50");
+        }
+
+        function actualizarTextoHtml(domIndex, nuevoTexto) {
+            if(domIndex === -1) return;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(currentHtml, "text/html");
+            doc.querySelectorAll('*')[domIndex].textContent = nuevoTexto;
+            currentHtml = doc.documentElement.outerHTML;
+            document.getElementById("web-editor").value = currentHtml;
+            actualizarIframe();
+        }
+
+        function actualizarIframe() { document.getElementById("web-preview").srcdoc = currentHtml; }
+        function actualizarPreviewFromCode() { currentHtml = document.getElementById("web-editor").value; cargarGestorContenido(); actualizarIframe(); }
+        async function descargarWeb() { const res = await fetch("/download/web", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({html: currentHtml}) }); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "fenix_dr_web.zip"; a.click(); }
+        
+        async function generarVideo() { 
+            const prompt = document.getElementById("video-prompt").value; if(!prompt) return;
+            const btn = document.getElementById("btn-gen-video"); const status = document.getElementById("video-status"); const resDiv = document.getElementById("video-result");
+            btn.disabled = true; status.classList.remove("hidden"); resDiv.classList.add("hidden");
+            try {
+                const res = await fetch("/generate/video", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({prompt}) });
+                const data = await res.json();
+                if(data.status === "success") {
+                    resDiv.innerHTML=`<video controls class="w-full rounded-lg shadow-lg"><source src="${data.video_url}"></video><a href="${data.video_url}" download class="mt-4 block bg-gray-800 p-2 text-purple-400 rounded hover:bg-gray-700">⬇️ Descargar MP4</a>`;
+                    resDiv.classList.remove("hidden");
+                }
+            } catch(e) {}
+            btn.disabled = false; status.classList.add("hidden");
+        }
+
+        async function cargarHistorial() { 
+            const res = await fetch("/api/history"); 
+            const data = await res.json(); 
+            const grid = document.getElementById("history-grid");
+            grid.innerHTML = data.items.map(v => {
+                if(v.tipo === "video") {
+                    return `<div class="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-lg"><div class="flex items-center gap-2 mb-2 text-purple-400 font-bold"><span>🎬</span> Video Reel</div><video controls class="w-full h-40 object-cover rounded mb-3"><source src="${v.url}"></video><a href="${v.url}" download class="text-sm bg-gray-800 text-white px-3 py-2 rounded block text-center hover:bg-gray-700">⬇️ Descargar MP4</a></div>`;
+                } else {
+                    return `<div class="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-lg"><div class="flex items-center gap-2 mb-2 text-blue-400 font-bold"><span>🌐</span> Proyecto Web</div><div class="h-40 bg-white rounded overflow-hidden mb-3 relative border border-gray-600"><iframe src="${v.url}" class="w-full h-full pointer-events-none transform scale-[0.6] origin-top-left" style="width: 166%; height: 166%;"></iframe></div><div class="flex gap-2"><a href="${v.url}" target="_blank" class="flex-1 text-center text-sm bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-500 font-bold">👁️ Abrir</a><a href="${v.url}" download class="flex-1 text-center text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-500 font-bold">⬇️ HTML</a></div></div>`;
+                }
+            }).join(""); 
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+import os
+import random
+import glob
+from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ImageClip, concatenate_videoclips
+
+# ==========================================
+# ⚙️ CONFIGURACIÓN DEL PRODUCTO Y ESTILO
+# ==========================================
+PRODUCTO_URL = "https://digitalriders.com/"
+PRODUCTO_NOMBRE = "Reto 21 de Digital Riders"
+CIERRE_VENTA = "En el perfil encontrarás más información."
+
+def generar_prompt_largo(tema):
+    prompt = f"""
+    Actúa como un experto creador de contenido viral en TikTok y experto en marketing.
+    Crea un guion MUY LARGO y detallado (al menos 200 palabras) sobre el siguiente tema: '{tema}'.
+    
+    Reglas estrictas:
+    1. El objetivo oculto es promocionar el '{PRODUCTO_NOMBRE}'.
+    2. Da muchísimo valor y consejos útiles antes de mencionar el producto.
+    3. Habla de forma enérgica, motivadora y directa (estilo mentalidad de tiburón/negocios).
+    4. LA ÚLTIMA FRASE DEL GUION DEBE SER OBLIGATORIAMENTE ESTA Y NO OTRA: "{CIERRE_VENTA}"
+    5. No incluyas acotaciones ni texto entre corchetes, solo lo que el narrador va a decir.
+    """
+    return prompt
+
+def obtener_musica_fondo(categoria="negocio"):
+    ruta_busqueda = f"música/{categoria}/*.mp3"
+    canciones = glob.glob(ruta_busqueda)
+    
+    if not canciones:
+        canciones = glob.glob(f"musica/{categoria}/*.mp3")
+        
+    if canciones:
+        cancion_elegida = random.choice(canciones)
+        print(f"🎵 Canción seleccionada: {cancion_elegida}")
+        return AudioFileClip(cancion_elegida).volumex(0.15)
+    else:
+        print("⚠️ No hay música en la carpeta. El vídeo irá sin fondo musical.")
+        return None
+
+def crear_subtitulos_de_moda(texto, duracion_total):
+    subtitulo = TextClip(
+        texto, 
+        fontsize=70, 
+        color='yellow', 
+        font='Impact', 
+        stroke_color='black', 
+        stroke_width=3, 
+        method='caption', 
+        size=(800, None),
+        align='center'
+    )
+    return subtitulo.set_position(('center', 'center')).set_duration(duracion_total)
+
+def ensamblar_video_final(ruta_video_fondo, ruta_audio_voz, texto_guion, archivo_salida="video_final.mp4"):
+    print("🎬 Ensamblando la obra maestra...")
+    
+    video = VideoFileClip(ruta_video_fondo)
+    voz = AudioFileClip(ruta_audio_voz)
+    
+    if video.duration < voz.duration:
+        video = video.loop(duration=voz.duration)
+    else:
+        video = video.subclip(0, voz.duration)
+
+    try:
+        icono = ImageClip("Sello.png")
+        icono = icono.resize(width=150).set_position(("right", "top")).set_opacity(0.8).set_duration(voz.duration)
+    except Exception as e:
+        print("⚠️ No se encontró Sello.png. Omitiendo icono.")
+        icono = None
+
+    clip_subtitulos = crear_subtitulos_de_moda(texto_guion[:50] + "...", voz.duration) 
+
+    musica = obtener_musica_fondo("negocio")
+    audio_final = voz
+    if musica:
+        musica = musica.subclip(0, voz.duration)
+        from moviepy.editor import CompositeAudioClip
+        audio_final = CompositeAudioClip([voz, musica])
+
+    video = video.set_audio(audio_final)
+
+    capas = [video, clip_subtitulos]
+    if icono:
+        capas.append(icono)
+        
+    video_final = CompositeVideoClip(capas)
+
+    print(f"💾 Guardando vídeo largo en {archivo_salida}...")
+    video_final.write_videofile(
+        archivo_salida, 
+        fps=30, 
+        codec="libx264", 
+        audio_codec="aac", 
+        preset="fast", 
+        threads=4
+    )
+    print("✅ ¡VÍDEO VIRAL COMPLETADO!")
+
+if __name__ == "__main__":
+    tema_recibido = os.getenv("TEMA_VIDEO", "Cómo generar ingresos pasivos en 2026")
+    print(f"🔥 Iniciando producción para el tema: {tema_recibido}")
+    
+    prompt_final = generar_prompt_largo(tema_recibido)
+    print("🧠 Prompt enviado a la IA:\n", prompt_final)
+    print("⏳ Ejecutando pipeline de Fenix Studio...")

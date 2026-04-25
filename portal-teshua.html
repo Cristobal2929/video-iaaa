@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESHUÁ - El Portal de la Verdad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #FDFCF0; font-family: 'Playfair Display', serif; }
+        .text-gold { background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); -webkit-background-clip: text; color: transparent; }
+        .bg-gold { background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(191, 149, 63, 0.3); }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+    </style>
+</head>
+<body class="antialiased text-gray-900">
+
+    <header class="h-screen flex flex-col justify-center items-center text-center p-6">
+        <h1 class="font-cinzel text-6xl md:text-8xl mb-4 text-gold tracking-tighter" data-aos="zoom-in">TESHUÁ</h1>
+        <p class="text-xl md:text-2xl italic opacity-80" data-aos="fade-up" data-aos-delay="500">El Puzzle Espiritual Unificado</p>
+        <div class="mt-12 animate-bounce">
+            <a href="#herramienta" class="bg-gold text-white px-8 py-3 rounded-full font-cinzel text-sm tracking-widest shadow-lg">Activar Código</a>
+        </div>
+    </header>
+
+    <section id="herramienta" class="py-24 px-6 bg-white/50">
+        <div class="max-w-3xl mx-auto glass rounded-3xl p-8 md:p-16 shadow-2xl text-center" data-aos="fade-up">
+            <h2 class="font-cinzel text-3xl md:text-4xl mb-8 text-gold">Herramienta de Activación</h2>
+            <p class="mb-10 opacity-70">Introduce tus datos para revelar tu frecuencia en el Puzzle Divino.</p>
+            
+            <div class="space-y-6">
+                <input type="text" id="nombre" placeholder="Nombre Completo" class="w-full p-4 rounded-xl border border-gold/30 bg-white/50 outline-none focus:ring-2 focus:ring-yellow-500">
+                <input type="date" id="fecha" class="w-full p-4 rounded-xl border border-gold/30 bg-white/50 outline-none focus:ring-2 focus:ring-yellow-500">
+                <button onclick="revelarCodigo()" class="w-full bg-gold text-white font-cinzel py-4 rounded-xl shadow-xl hover:scale-105 transition-transform">Revelar mi Código</button>
+            </div>
+
+            <div id="resultado" class="mt-12 hidden p-8 border-t border-gold/20 animate-pulse">
+                <h3 class="font-cinzel text-2xl text-gold mb-4" id="tituloResultado"></h3>
+                <p id="mensajeResultado" class="text-lg italic leading-relaxed"></p>
+                <div class="mt-6 font-cinzel text-4xl text-gray-800" id="numeroFrecuencia"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 text-center opacity-40 text-sm font-cinzel">
+        <p>TESHUÁ © 2026 - Cristóbal José Ortiz Guerrero</p>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        function revelarCodigo() {
+            const nombre = document.getElementById('nombre').value;
+            const fecha = document.getElementById('fecha').value;
+            const res = document.getElementById('resultado');
+            
+            if(!nombre || !fecha) return alert("Por favor, completa los datos sagrados.");
+
+            // Lógica simbólica de cálculo
+            const suma = nombre.length + parseInt(fecha.split('-')[2]);
+            const cod = (suma % 4) + 1;
+            
+            res.classList.remove('hidden');
+            const titulo = document.getElementById('tituloResultado');
+            const mensaje = document.getElementById('mensajeResultado');
+            const frecuencia = document.getElementById('numeroFrecuencia');
+
+            if(cod === 1) {
+                titulo.innerText = "Fase: PORTADOR DE LUZ";
+                mensaje.innerText = "Eres el inicio y la guía. Tu misión es llevar la antorcha de la verdad donde hay oscuridad.";
+                frecuencia.innerText = "CÓDIGO 1";
+            } else if(cod === 2) {
+                titulo.innerText = "Fase: PROTECTOR JUSTO";
+                mensaje.innerText = "Como el patriarca, tu fuerza reside en la fe probada y en la provisión espiritual para los demás.";
+                frecuencia.innerText = "CÓDIGO 2";
+            } else if(cod === 3) {
+                titulo.innerText = "Fase: HIJO DE LA LIBERACIÓN";
+                mensaje.innerText = "Eres un canal puro de retorno. Tu vida es un puente entre lo celestial y lo terrenal.";
+                frecuencia.innerText = "CÓDIGO 3";
+            } else {
+                titulo.innerText = "Fase: GUERRERO DE SHALÉM";
+                mensaje.innerText = "Tu propósito es la defensa de lo sagrado y la unificación de todas las piezas del puzzle.";
+                frecuencia.innerText = "CÓDIGO 4";
+            }
+            
+            window.scrollTo({ top: res.offsetTop + 500, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+

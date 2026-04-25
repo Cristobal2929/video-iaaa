@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editor Fenix</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        input { width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        button { background: #00ca4e; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🎬 Proyecto: {{ project.name }}</h2>
+    <div class="box">
+        <p>🪙 Créditos: {{ user.credits }}</p>
+        <input type="text" id="query" placeholder="Ej: Motivación y éxito" value="Video viral">
+        <button onclick="generate()">Generar Video (-1 crédito)</button>
+        <div id="status" style="margin-top:20px; color: #ffbd44;"></div>
+    </div>
+    <script>
+        async function generate() {
+            const q = document.getElementById('query').value;
+            const res = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: q})
+            });
+            const data = await res.json();
+            if (data.job_id) {
+                document.getElementById('status').innerText = "En cola / Procesando...";
+                setInterval(async () => {
+                    const r = await fetch('/status/' + data.job_id);
+                    const s = await r.json();
+                    if(s.status === 'completed') location.href = '/dashboard';
+                }, 4000);
+            }
+        }
+    </script>
+</body>
+</html>

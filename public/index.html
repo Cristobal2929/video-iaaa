@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador Universal de Sitios Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="gradient-bg p-6 text-white shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tighter"><i class="fas fa-magic mr-2"></i> WEB MASTER AI</h1>
+            <span class="opacity-75 text-sm">Panel de Control de Cristóbal</span>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto">
+            <div class="glass rounded-3xl p-8 shadow-2xl border border-white">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">¿Qué página web necesitas?</h2>
+                <p class="text-gray-600 mb-8">Describe tu idea y la IA generará el código profesional al instante.</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción del Proyecto</label>
+                        <textarea id="prompt" placeholder="Ej: Una web para una pizzería con menú, contacto y fotos elegantes..." 
+                            class="w-full p-4 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 outline-none h-40 transition-all"></textarea>
+                    </div>
+
+                    <button onclick="crearWeb()" id="btnMain" class="w-full gradient-bg text-white font-bold py-5 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-xl">
+                        GENERAR PÁGINA AHORA
+                    </button>
+
+                    <div id="loading" class="hidden flex flex-col items-center py-6">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+                        <p class="text-indigo-600 font-medium italic">Escribiendo código profesional...</p>
+                    </div>
+
+                    <div id="resultado" class="hidden mt-8 p-6 bg-green-50 border-2 border-green-200 rounded-2xl text-center">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-green-800 mb-2">¡Página Web Lista!</h3>
+                        <p class="text-green-700 mb-6">Se ha generado el archivo HTML correctamente.</p>
+                        <a id="webUrl" href="#" target="_blank" class="inline-block bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-colors">
+                            Ver mi nueva web <i class="fas fa-external-link-alt ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="mt-12 text-center text-gray-500 text-sm">
+                Desarrollado por Cristóbal José Ortiz Guerrero &bull; 2026
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        async function crearWeb() {
+            const promptInput = document.getElementById('prompt');
+            const btn = document.getElementById('btnMain');
+            const loading = document.getElementById('loading');
+            const res = document.getElementById('resultado');
+
+            if(!promptInput.value.trim()) return alert("Por favor, describe qué web quieres crear.");
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            loading.classList.remove('hidden');
+            res.classList.add('hidden');
+
+            try {
+                // Aquí conectamos con tu API de generación
+                const response = await fetch('/generate-custom-web', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tema: promptInput.value })
+                });
+                
+                const data = await response.json();
+                
+                if(data.status === 'success') {
+                    document.getElementById('webUrl').href = data.url;
+                    res.classList.remove('hidden');
+                } else {
+                    alert("Hubo un error al generar: " + data.message);
+                }
+            } catch (err) {
+                alert("Error de conexión con el servidor.");
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                loading.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

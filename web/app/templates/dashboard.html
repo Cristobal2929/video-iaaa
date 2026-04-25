@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fenix Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: white; margin: 0; }
+        .nav { background: #222; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 2px solid #00ca4e; }
+        .container { padding: 30px; max-width: 1000px; margin: auto; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .btn { background: #00ca4e; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; border: none; cursor: pointer; font-weight: bold; }
+        .wallet { background: #333; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; margin: 10px 0; border: 1px dashed #777; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <h2>FENIX AI</h2>
+        <div>🪙 <b>{{ user.credits }}</b> Créditos</div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h3>🚀 Crear Proyecto</h3>
+            <form action="/create_project" method="POST">
+                <input type="text" name="name" placeholder="Nombre del proyecto" required style="padding:10px; width:70%; border-radius:5px; border:none;">
+                <button type="submit" class="btn">Crear</button>
+            </form>
+        </div>
+        <div class="card">
+            <h3>💎 Recargar</h3>
+            <p>Envía USDT (TRC20) para 10 créditos ($5):</p>
+            <div class="wallet">TQjxoLc5wf5QHRhgL5Efugrvpm3jFwYmpB</div>
+        </div>
+        <h3>🎬 Historial</h3>
+        {% for j in jobs %}
+        <div class="card">
+            <b>{{ j.query }}</b> | Estado: <i>{{ j.status }}</i>
+            {% if j.status == 'completed' %}
+            <br><br><a href="/download/{{ j.id }}" class="btn" style="background:#007bff">⬇️ Descargar</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

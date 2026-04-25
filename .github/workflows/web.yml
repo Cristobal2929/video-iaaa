@@ -1,0 +1,28 @@
+name: Generador de Webs PRO
+on:
+  repository_dispatch:
+    types: [generar_web]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Instalar dependencias
+        run: pip install requests
+      - name: Ejecutar Arquitecto
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          DESCRIPCION_WEB: ${{ github.event.client_payload.descripcion }}
+        run: python constructor.py
+      - name: Subir cambios
+        run: |
+          git config --global user.name "Digital Riders Bot"
+          git config --global user.email "bot@digitalriders.com"
+          git add .
+          git commit -m "🌐 Nueva Web Generada: ${{ github.event.client_payload.descripcion }}"
+          git push

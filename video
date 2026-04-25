@@ -1,0 +1,35 @@
+#!/bin/bash
+# 1. Cargar el token desde el archivo seguro
+if [ -f .env ]; then
+    source .env
+else
+    echo "❌ Error: No encuentro el archivo .env con el token."
+    exit 1
+fi
+
+TEMA=$1
+
+# 2. Validar que has escrito un tema
+if [ -z "$TEMA" ]; then
+    echo "⚠️ Uso: ./video \"El tema de mi video\""
+    exit 1
+fi
+
+echo "📡 Conectando con GitHub Actions..."
+echo "🎬 Lanzando producción para: $TEMA"
+
+# 3. Enviar la orden con el header Bearer profesional
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Content-Type: application/json" \
+  https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches \
+  -d "{\"event_type\": \"hacer_video\", \"client_payload\": {\"tema\": \"$TEMA\"}}")
+
+# 4. Feedback instantáneo
+if [ "$STATUS" == "204" ]; then
+    echo "✅ ¡VAMOS! Orden recibida correctamente."
+    echo "📊 Puedes ver el proceso aquí: https://github.com/Cristobal2929/video-iaaa/actions"
+else
+    echo "❌ Fallo al enviar (Código: $STATUS). Revisa los permisos de tu token."
+fi

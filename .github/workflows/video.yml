@@ -1,0 +1,41 @@
+name: Cine Fénix Producción
+
+on:
+  repository_dispatch:
+    types: [hacer_video]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          
+      - name: Instalar Dependencias (AQUÍ ESTÁ LA MAGIA)
+        run: |
+          pip install "moviepy>=2.0.0" requests edge-tts asyncio
+          sudo apt-get update
+          sudo apt-get install -y imagemagick fonts-liberation
+          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
+          
+      - name: Crear Vídeo
+        env:
+          TEMA_VIDEO: ${{ github.event.client_payload.tema }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python main.py
+        
+      - name: Subir a la Web
+        run: |
+          git config --global user.name "FenixRobot"
+          git config --global user.email "robot@fenix.com"
+          git add docs/videos/*.mp4
+          git commit -m "🎬 Vídeo con Voz de Álvaro Completado" || echo "Sin cambios"
+          git pull origin main --rebase
+          git push

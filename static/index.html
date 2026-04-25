@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fenix AI Studio - Web & Video</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans p-8">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-4xl font-bold text-center mb-8 text-blue-400">🤖 Fenix AI Studio</h1>
+        
+        <div class="flex justify-center space-x-4 mb-8">
+            <button onclick="showTab('web')" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold transition shadow-lg shadow-blue-500/30">🌐 Generador Web</button>
+            <button onclick="showTab('video')" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition shadow-lg shadow-purple-500/30">🎬 Generador Video</button>
+        </div>
+
+        <div id="tab-web" class="bg-slate-800 p-6 rounded-xl hidden border border-slate-700 shadow-xl">
+            <h2 class="text-2xl font-semibold mb-4">Generador de Páginas Web</h2>
+            <p class="text-slate-400 mb-4">Describe la web que deseas y la IA generará el código al instante.</p>
+            <textarea id="prompt-web" rows="4" class="w-full bg-slate-700 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4 placeholder-slate-400" placeholder="Ej: Una landing page moderna para una tienda de zapatillas, fondo oscuro..."></textarea>
+            <button onclick="generateWeb()" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold transition mb-6 shadow-lg">🚀 Crear Magia (Web)</button>
+            <div id="loading-web" class="hidden text-center text-yellow-400 mb-4 animate-pulse">Generando código fuente con Groq...</div>
+            <div class="bg-white rounded-lg overflow-hidden h-[500px] border-4 border-slate-700 relative">
+                <iframe id="preview-web" class="w-full h-full" sandbox="allow-scripts"></iframe>
+            </div>
+        </div>
+
+        <div id="tab-video" class="bg-slate-800 p-6 rounded-xl hidden border border-slate-700 shadow-xl">
+            <h2 class="text-2xl font-semibold mb-4">Generador de Video</h2>
+            <p class="text-slate-400 mb-4">Describe la escena que quieres animar.</p>
+            <textarea id="prompt-video" rows="4" class="w-full bg-slate-700 p-4 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none mb-4 placeholder-slate-400" placeholder="Ej: Un paisaje futurista en Marte con vehículos volando..."></textarea>
+            <button onclick="generateVideo()" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold transition mb-6 shadow-lg">🎥 Crear Magia (Video)</button>
+            <div id="loading-video" class="hidden text-center text-yellow-400 mb-4 animate-pulse">Procesando video...</div>
+            <div id="preview-video" class="p-6 bg-slate-700 rounded-lg text-center text-slate-300">
+                El resultado del video aparecerá aquí.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = () => showTab('web');
+        function showTab(tabName) {
+            document.getElementById('tab-web').classList.add('hidden');
+            document.getElementById('tab-video').classList.add('hidden');
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+        }
+        async function generateWeb() {
+            const prompt = document.getElementById('prompt-web').value;
+            if (!prompt) return alert('Por favor, escribe una descripción primero.');
+            document.getElementById('loading-web').classList.remove('hidden');
+            const iframe = document.getElementById('preview-web');
+            iframe.srcdoc = "<h3 style='font-family:sans-serif; text-align:center; margin-top:20%;'>Cargando...</h3>";
+            try {
+                const response = await fetch('/generate/web', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                iframe.srcdoc = data.html; 
+            } catch (error) {
+                iframe.srcdoc = "<h3 style='color:red;'>Error al conectar con la API.</h3>";
+                console.error(error);
+            } finally {
+                document.getElementById('loading-web').classList.add('hidden');
+            }
+        }
+        async function generateVideo() {
+            const prompt = document.getElementById('prompt-video').value;
+            if (!prompt) return alert('Por favor, escribe una descripción primero.');
+            document.getElementById('loading-video').classList.remove('hidden');
+            const resultDiv = document.getElementById('preview-video');
+            resultDiv.innerHTML = "Conectando con el motor de video...";
+            try {
+                const response = await fetch('/generate/video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = data.content || JSON.stringify(data);
+            } catch (error) {
+                resultDiv.innerHTML = "<span class='text-red-400'>Error al conectar con la API.</span>";
+                console.error(error);
+            } finally {
+                document.getElementById('loading-video').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

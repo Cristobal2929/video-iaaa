@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FENIX STUDIO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; }
+        .fenix-input { background: #1a1a1a; border: 2px solid #333; border-radius: 20px; }
+        .fenix-btn { background: #ff6600; border-radius: 20px; transition: 0.3s; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-md mx-auto mt-10">
+        <h1 class="text-4xl font-black italic mb-10">FENIX <span class="text-orange-500 font-normal">STUDIO</span></h1>
+
+        <div class="bg-zinc-900/50 p-6 rounded-[40px] border border-zinc-800 mb-10">
+            
+            <label class="text-[10px] font-bold text-orange-500 uppercase ml-4 mb-2 block">Llave Maestra (ghp_...)</label>
+            <input type="password" id="token" placeholder="PEGA AQUÍ TU LLAVE" 
+                class="w-full p-4 fenix-input mb-6 text-sm text-white border-orange-500 outline-none focus:ring-2 focus:ring-orange-500">
+            
+            <label class="text-[10px] font-bold text-zinc-500 uppercase ml-4 mb-2 block">¿De qué trata el vídeo?</label>
+            <textarea id="tema" placeholder="Escribe el tema aquí..." 
+                class="w-full p-6 fenix-input mb-6 h-32 text-center text-lg outline-none"></textarea>
+
+            <button onclick="enviar()" id="btn" class="w-full p-6 fenix-btn text-2xl font-black uppercase italic">
+                GENERAR VÍDEO VIRAL
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('token').value = localStorage.getItem('fenix_key') || '';
+        async function enviar() {
+            const tema = document.getElementById('tema').value;
+            const token = document.getElementById('token').value;
+            if(!tema || !token) return alert("Falta el tema o la llave ghp_");
+            localStorage.setItem('fenix_key', token);
+            document.getElementById('btn').disabled = true;
+            try {
+                const res = await fetch('https://api.github.com/repos/Cristobal2929/video-iaaa/dispatches', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+                    body: JSON.stringify({ event_type: 'hacer_video', client_payload: { tema: tema } })
+                });
+                if (res.status === 204) alert("🚀 ¡ORDEN ENVIADA!");
+                else alert("❌ ERROR: Llave no válida.");
+            } catch (e) { alert("❌ FALLO DE RED"); }
+            document.getElementById('btn').disabled = false;
+        }
+    </script>
+</body>
+</html>

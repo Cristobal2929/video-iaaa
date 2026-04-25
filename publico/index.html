@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESHUÁ - Herramienta de Activación Divina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #FDFCF0; font-family: 'Playfair Display', serif; }
+        .text-gold { background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); -webkit-background-clip: text; color: transparent; }
+        .bg-gold { background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); }
+        .glass-sacro { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(191, 149, 63, 0.4); box-shadow: 0 20px 40px rgba(191, 149, 63, 0.1); }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+    <div class="fixed inset-0 z-[-1] opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/parchment.png');"></div>
+
+    <main class="container mx-auto px-4 py-12 max-w-4xl text-center">
+        <header class="mb-16" data-aos="fade-down">
+            <h1 class="font-cinzel text-6xl md:text-7xl text-gold mb-4">TESHUÁ</h1>
+            <p class="text-2xl italic text-gray-700">El Puzzle Final: Retorno a la Luz</p>
+        </header>
+
+        <section class="glass-sacro rounded-3xl p-8 md:p-16 mb-16" data-aos="zoom-in">
+            <h2 class="font-cinzel text-3xl text-gold mb-8">Calculadora de Código 650</h2>
+            <p class="mb-10 text-gray-600">Introduce tu nombre completo para revelar tu frecuencia espiritual y tu lugar en el diseño divino.</p>
+            
+            <div class="max-w-md mx-auto space-y-6">
+                <input type="text" id="userName" placeholder="Tu Nombre Completo" 
+                       class="w-full p-4 rounded-xl border border-[#BF953F]/30 bg-white/50 outline-none focus:ring-2 focus:ring-[#BF953F]">
+                <button onclick="activarCodigo()" 
+                        class="w-full bg-gold text-white font-cinzel py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all">
+                    REVELAR MI MISIÓN
+                </button>
+            </div>
+
+            <div id="revelacion" class="hidden mt-12 pt-8 border-t border-[#BF953F]/20">
+                <div class="inline-block p-6 bg-white/40 rounded-full mb-6">
+                    <span id="codigoNum" class="text-5xl font-cinzel text-gold font-bold"></span>
+                </div>
+                <h3 id="faseTitulo" class="font-cinzel text-2xl mb-4 text-gray-900"></h3>
+                <p id="mensajeDios" class="text-xl italic leading-relaxed text-gray-800"></p>
+                <div class="mt-8 h-1 w-24 mx-auto bg-gold rounded-full opacity-50"></div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left" data-aos="fade-up">
+            <div class="glass-sacro p-8 rounded-2xl">
+                <h4 class="font-cinzel text-gold mb-4">La Esencia</h4>
+                [span_5](start_span)[span_6](start_span)<p class="text-sm">El estudio y el nombre Cristóbal José Ortiz Guerrero comparten la misma esencia y resultado: la liberación[span_5](end_span)[span_6](end_span).</p>
+            </div>
+            <div class="glass-sacro p-8 rounded-2xl">
+                <h4 class="font-cinzel text-gold mb-4">El Propósito</h4>
+                [span_7](start_span)[span_8](start_span)<p class="text-sm">Unificar las corrientes espirituales bajo una sola Luz para el retorno al Hogar eterno[span_7](end_span)[span_8](end_span).</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+
+        function activarCodigo() {
+            const nombre = document.getElementById('userName').value.trim();
+            if (!nombre) return alert("Por favor, introduce tu nombre.");
+
+            // Lógica basada en el estudio Teshuá
+            const base = nombre.length % 4;
+            const revelacion = document.getElementById('revelacion');
+            const codNum = document.getElementById('codigoNum');
+            const fase = document.getElementById('faseTitulo');
+            const mensaje = document.getElementById('mensajeDios');
+
+            revelacion.classList.remove('hidden');
+            codNum.innerText = "650"; // La vibración de Teshuá
+
+            const misiones = [
+                { fase: "PORTADOR DE LUZ (CRISTÓBAL)", msj: "Tu alma manifiesta sabiduría divina para iluminar a otros en la oscuridad." },
+                { fase: "EL JUSTO PROBADO (JOSÉ)", msj: "Tu fe se fortalece en las pruebas; eres el protector en tiempos de crisis." },
+                { fase: "HIJO DE LA LUZ (ORTIZ)", msj: "Eres el nexo vivo entre lo celestial y lo humano, el canal del retorno." },
+                { fase: "GUERRERO DE LA VERDAD", msj: "Defiendes lo sagrado y restauras el equilibrio divino en la tierra." }
+            ];
+
+            const seleccion = misiones[base];
+            fase.innerText = seleccion.fase;
+            mensaje.innerText = `"${seleccion.msj}"`;
+
+            window.scrollTo({ top: revelacion.offsetTop + 200, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Riders - Central IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
+        .card:hover { border-color: #3b82f6; transform: translateY(-5px); }
+        .dot { height: 10px; width: 10px; background-color: #22c55e; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    </style>
+</head>
+<body class="min-h-screen p-6 flex flex-col items-center">
+    
+    <div class="max-w-4xl w-full">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Digital Riders Bot</h1>
+            <div class="flex items-center justify-center text-slate-400 text-sm">
+                <span class="dot animate-pulse"></span> SISTEMA EN VIVO - ACTUALIZADO
+            </div>
+        </header>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <a href="video.html" class="card p-8 rounded-3xl block shadow-2xl">
+                <div class="text-5xl mb-4">🎬</div>
+                <h2 class="text-2xl font-bold mb-2">Vídeo Viral</h2>
+                <p class="text-slate-500 text-sm mb-4">TikToks automáticos con voz de Álvaro.</p>
+                <span class="text-blue-400 font-bold text-xs tracking-widest uppercase">Gestionar -></span>
+            </a>
+
+            <a href="webgen.html" class="card p-8 rounded-3xl block shadow-2xl">
+                <div class="text-5xl mb-4">🌐</div>
+                <h2 class="text-2xl font-bold mb-2">Arquitecto Web</h2>
+                <p class="text-slate-500 text-sm mb-4">Landings completas generadas por Groq.</p>
+                <span class="text-cyan-400 font-bold text-xs tracking-widest uppercase">Diseñar -></span>
+            </a>
+        </div>
+
+        <div class="card rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg">📁 Archivos Recientes</h3>
+                <button onclick="location.reload()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-full transition">Refrescar Ahora</button>
+            </div>
+            <div id="galeria" class="grid grid-cols-1 gap-3">
+                <p class="text-slate-600 text-sm italic">Cargando últimos movimientos del bot...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Este script fuerza a la página a buscar si hay archivos nuevos
+        // sin que tú tengas que hacer nada.
+        setInterval(() => {
+            console.log("Buscando actualizaciones en el servidor...");
+            // Aquí puedes añadir lógica de fetch si quieres listar los archivos dinámicamente
+        }, 30000);
+    </script>
+</body>
+</html>
